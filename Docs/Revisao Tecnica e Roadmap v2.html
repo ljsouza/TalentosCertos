@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<style data-omelette-print-defaults>
+@media print {
+  @page { margin: 0; }
+  body { padding: 0.5in; box-sizing: border-box; }
+  h1, h2, h3, h4, h5, h6 { break-after: avoid; }
+  figure, table, pre, blockquote, img, svg, tr, [class~="card" i] { break-inside: avoid; }
+  img, svg { max-width: 100%; }
+  p { orphans: 3; widows: 3; }
+}
+</style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MaringáPost Empregos — Revisão Técnica & Roadmap v2.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600;6..72,700&family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --display:'Newsreader',Georgia,serif;
+  --sans:'Archivo',system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --ink:#15171a; --ink-80:#3a3d42; --ink-60:#6b6f76; --ink-40:#9a9ea6;
+  --paper:#faf9f6; --card:#fff; --line:#e7e4dd; --line-2:#f0ede7;
+  --accent:#1f8a5b; --accent-2:#b8742a; --accent-soft:#e7f3ec; --accent-glow:#1f8a5b1f;
+  --indigo:#4f46e5; --indigo-soft:#eceafe;
+  --amber:#b8742a; --amber-soft:#f5ede2;
+  --teal:#0f7d8c; --teal-soft:#e1f0f1;
+  --r:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:#e9e6df;color:var(--ink);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--display);font-weight:600;line-height:1.1;letter-spacing:-.01em;text-wrap:balance}
+strong{font-weight:700}
+em{font-style:italic}
+.chapeu{font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+
+/* page */
+.page{max-width:880px;margin:24px auto;background:var(--card);box-shadow:0 4px 24px rgba(0,0,0,.1);padding:64px 72px;border-radius:2px}
+.page+.page{margin-top:0}
+
+/* cover */
+.cover{border-top:6px solid var(--accent)}
+.cover-logo{display:flex;flex-direction:column;line-height:1;gap:4px;margin-bottom:64px}
+.cover-logo b{font-family:var(--display);font-size:26px;font-weight:700}
+.cover-logo span{font-family:var(--sans);font-size:9px;font-weight:800;letter-spacing:.34em;text-transform:uppercase;color:var(--accent)}
+.cover h1{font-size:46px;line-height:1.02;margin-bottom:20px}
+.cover .lead{font-size:18px;color:var(--ink-60);max-width:48ch;line-height:1.5;margin-bottom:48px}
+.cover-meta{display:flex;gap:40px;border-top:1px solid var(--line);padding-top:22px;flex-wrap:wrap}
+.cover-meta div span{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-40);margin-bottom:4px}
+.cover-meta div strong{font-size:15px}
+
+/* headings */
+.sec-num{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--accent);margin-bottom:8px;display:block}
+h2.sec{font-size:32px;margin-bottom:8px;padding-bottom:0}
+.sec-sub{font-size:16px;color:var(--ink-60);margin-bottom:32px;line-height:1.5}
+h3{font-size:21px;margin:36px 0 14px}
+h4{font-size:16px;font-weight:700;font-family:var(--sans);margin:22px 0 8px}
+p{margin-bottom:14px;color:var(--ink-80)}
+p.muted{color:var(--ink-60);font-size:14px}
+
+/* lists */
+ul.bul{list-style:none;margin:0 0 16px}
+ul.bul li{position:relative;padding-left:22px;margin-bottom:9px;color:var(--ink-80)}
+ul.bul li::before{content:"";position:absolute;left:4px;top:9px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+ul.bul li b{color:var(--ink)}
+
+/* callout */
+.callout{display:flex;gap:14px;background:var(--accent-soft);border-radius:12px;padding:18px 20px;margin:20px 0}
+.callout.teal{background:var(--teal-soft)}
+.callout.indigo{background:var(--indigo-soft)}
+.callout .ic{flex-shrink:0;width:26px;height:26px;border-radius:7px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:800;font-size:15px}
+.callout.teal .ic{background:var(--teal)}
+.callout.indigo .ic{background:var(--indigo)}
+.callout p{margin:0;font-size:14px;color:var(--ink-80)}
+.callout strong{color:var(--ink)}
+
+/* feature inventory */
+.inv{display:flex;flex-direction:column;gap:10px;margin:18px 0}
+.inv-row{display:grid;grid-template-columns:170px 1fr;gap:16px;padding:14px 0;border-top:1px solid var(--line-2)}
+.inv-row:first-child{border-top:none}
+.inv-row .k{font-weight:700;font-size:14.5px}
+.inv-row .k small{display:block;font-weight:500;font-size:12px;color:var(--ink-40);margin-top:2px}
+.inv-row .v{font-size:13.5px;color:var(--ink-60)}
+.inv-row .v ul{list-style:none}
+.inv-row .v li{position:relative;padding-left:16px;margin-bottom:4px}
+.inv-row .v li::before{content:"–";position:absolute;left:0;color:var(--accent)}
+
+/* stack cards */
+.stack{display:flex;flex-direction:column;gap:14px;margin:20px 0}
+.scard{border:1px solid var(--line);border-radius:14px;padding:20px 22px}
+.scard.pick{border-color:var(--accent);background:linear-gradient(180deg,var(--accent-soft),#fff 60%)}
+.scard-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.scard-head b{font-size:17px;font-weight:700;font-family:var(--sans)}
+.pill{font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:100px}
+.pill.rec{background:var(--accent);color:#fff}
+.pill.alt{background:var(--line-2);color:var(--ink-60)}
+.pill.free{background:var(--accent-soft);color:var(--accent)}
+.scard p{font-size:13.5px;margin-bottom:10px}
+.scard .limits{display:flex;flex-wrap:wrap;gap:8px}
+.scard .limits span{font-size:12px;font-family:var(--mono);background:#fff;border:1px solid var(--line);padding:4px 9px;border-radius:7px;color:var(--ink-80)}
+.scard.pick .limits span{background:#fff}
+
+/* alts row */
+.alts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.alt{border:1px solid var(--line);border-radius:10px;padding:13px 15px}
+.alt b{font-size:14px;font-weight:700;font-family:var(--sans);display:block;margin-bottom:3px}
+.alt span{font-size:12.5px;color:var(--ink-60)}
+
+/* AI catalog */
+.aigrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}
+.aicard{border:1px solid var(--line);border-radius:13px;padding:16px 18px;background:#fff}
+.aicard .ah{display:flex;align-items:center;gap:9px;margin-bottom:7px}
+.aicard .num{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--teal);background:var(--teal-soft);width:24px;height:24px;border-radius:7px;display:grid;place-items:center;flex-shrink:0}
+.aicard b{font-size:14.5px;font-family:var(--sans);font-weight:700}
+.aicard p{font-size:12.5px;color:var(--ink-60);margin:0 0 8px;line-height:1.5}
+.aicard .mdl{font-size:11px;font-family:var(--mono);color:var(--ink-40)}
+.aicard .mdl b{font-size:11px;color:var(--teal);font-weight:600}
+
+/* deploy diagram */
+.deploy{border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:22px 0}
+.deploy-row{display:grid;grid-template-columns:150px 1fr;border-top:1px solid var(--line-2)}
+.deploy-row:first-child{border-top:none}
+.deploy-row .dk{background:var(--paper);padding:14px 16px;font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--ink);border-right:1px solid var(--line-2);display:flex;align-items:center}
+.deploy-row .dv{padding:14px 18px;font-size:13.5px;color:var(--ink-80)}
+.deploy-row .dv b{color:var(--ink)}
+.urlbar{display:inline-flex;align-items:center;gap:0;font-family:var(--mono);font-size:13px;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:4px 0}
+.urlbar .base{padding:6px 2px 6px 11px;color:var(--ink-60)}
+.urlbar .path{padding:6px 11px 6px 2px;color:var(--accent);font-weight:700;background:var(--accent-soft)}
+
+/* roadmap / versions */
+.phase{position:relative;padding-left:30px;margin-bottom:30px}
+.phase::before{content:"";position:absolute;left:7px;top:6px;bottom:-30px;width:2px;background:var(--line)}
+.phase:last-child::before{display:none}
+.phase-dot{position:absolute;left:0;top:3px;width:16px;height:16px;border-radius:50%;background:var(--accent);border:3px solid var(--card);box-shadow:0 0 0 1.5px var(--accent)}
+.phase.f0 .phase-dot{background:var(--ink-40);box-shadow:0 0 0 1.5px var(--ink-40)}
+.phase.f3 .phase-dot{background:var(--amber);box-shadow:0 0 0 1.5px var(--amber)}
+.phase.f4 .phase-dot{background:var(--indigo);box-shadow:0 0 0 1.5px var(--indigo)}
+.phase.f5 .phase-dot{background:var(--teal);box-shadow:0 0 0 1.5px var(--teal)}
+.phase-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+.phase-tag{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--ink-40)}
+.phase h3{margin:0;font-size:22px}
+.phase-goal{font-size:14px;color:var(--ink-60);margin:6px 0 12px;font-style:italic}
+.iq{display:flex;align-items:center;gap:8px;margin:0 0 14px;font-size:12.5px}
+.iq .iq-l{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:10.5px;color:var(--teal)}
+.iq .bar{flex:1;max-width:200px;height:7px;border-radius:100px;background:var(--line-2);overflow:hidden}
+.iq .bar i{display:block;height:100%;border-radius:100px;background:linear-gradient(90deg,var(--accent),var(--teal))}
+.iq .iq-v{font-family:var(--mono);font-size:11px;color:var(--ink-60)}
+.phase-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;margin-bottom:12px}
+.phase-grid .pf{display:flex;gap:9px;font-size:13.5px;color:var(--ink-80);padding:5px 0}
+.phase-grid .pf b{color:var(--ink);font-weight:600}
+.phase-grid .pf .n{font-family:var(--mono);font-size:11px;color:var(--accent);flex-shrink:0;padding-top:2px}
+.phase-foot{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.tagk{font-size:11.5px;font-weight:600;background:var(--line-2);color:var(--ink-60);padding:4px 10px;border-radius:7px}
+.tagk.ai{background:var(--teal-soft);color:var(--teal)}
+.phase .complex{font-size:12px;font-weight:700;padding:4px 11px;border-radius:100px}
+.cx1{background:var(--accent-soft);color:var(--accent)}
+.cx2{background:#fcf2e3;color:var(--amber)}
+.cx3{background:var(--indigo-soft);color:var(--indigo)}
+.cx4{background:var(--teal-soft);color:var(--teal)}
+
+/* table */
+.tbl{width:100%;border-collapse:collapse;margin:18px 0;font-size:13.5px}
+.tbl th{text-align:left;font-family:var(--sans);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-40);padding:0 12px 9px;border-bottom:1.5px solid var(--line)}
+.tbl td{padding:11px 12px;border-bottom:1px solid var(--line-2);color:var(--ink-80);vertical-align:top}
+.tbl td b{color:var(--ink)}
+.tbl tr:last-child td{border-bottom:none}
+
+/* review status */
+.rev{display:flex;flex-direction:column;gap:8px;margin:18px 0}
+.rev-row{display:flex;align-items:flex-start;gap:11px;padding:11px 14px;border:1px solid var(--line);border-radius:10px}
+.rev-row .ck{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:800;margin-top:1px}
+.rev-row .ck.warn{background:var(--amber)}
+.rev-row .rt b{font-size:14px;font-family:var(--sans)}
+.rev-row .rt span{display:block;font-size:12.5px;color:var(--ink-60);margin-top:2px}
+
+.foot-note{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink-40)}
+
+@media print{
+  body{background:#fff}
+  .page{box-shadow:none;margin:0;max-width:100%;border-radius:0;padding:48px 56px;page-break-after:always}
+  .page:last-child{page-break-after:auto}
+}
+@media(max-width:680px){
+  .page{padding:36px 24px}
+  .phase-grid,.alts,.aigrid{grid-template-columns:1fr}
+  .inv-row,.deploy-row{grid-template-columns:1fr}
+  .cover h1{font-size:34px}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ COVER ============ -->
+<section class="page cover">
+  <div class="cover-logo"><b>MaringáPost</b><span>Empregos</span></div>
+  <span class="chapeu">Revisão Técnica &amp; Plano de Implementação</span>
+  <h1>Da plataforma ao produto inteligente: revisão, stack, IA embarcada e roadmap por versões</h1>
+  <p class="lead">Uma leitura completa do que já funciona, das ferramentas gratuitas que sustentam o produto, das inteligências artificiais embarcadas em cada etapa — e de como acoplar a plataforma ao maringapost.com.br sem perder audiência.</p>
+  <div class="cover-meta">
+    <div><span>Documento</span><strong>Estratégia de Produto &amp; Tech</strong></div>
+    <div><span>Versão</span><strong>2.0 — Jun 2026</strong></div>
+    <div><span>Escopo</span><strong>Web SaaS · PT-BR · /empregos</strong></div>
+  </div>
+</section>
+
+<!-- ============ 01 — REVISÃO ============ -->
+<section class="page">
+  <span class="sec-num">01 — Revisão funcional</span>
+  <h2 class="sec">O que foi revisado neste ciclo</h2>
+  <p class="sec-sub">Varredura de todas as telas, botões e fluxos do protótipo. Resultado: produto íntegro e navegável de ponta a ponta, sem telas em branco nem erros de execução.</p>
+
+  <div class="rev">
+    <div class="rev-row"><div class="ck">✓</div><div class="rt"><b>17 telas navegáveis</b><span>Vagas, Na Hora, Talento 50+, Inclusão (PCD), Desafios, vaga, perfil de empresa, Carreira &amp; RH, Tribuna, artigo, pacotes, cadastro, painel do candidato, login e painel da empresa, admin — todas renderizam conteúdo.</span></div></div>
+    <div class="rev-row"><div class="ck">✓</div><div class="rt"><b>Ações respondem corretamente</b><span>Candidatura PCD, seleção/recusa de candidatos com retorno por WhatsApp, filtros, aprovação/reprovação de conteúdo no admin e troca de abas — todos com a resposta esperada.</span></div></div>
+    <div class="rev-row"><div class="ck">✓</div><div class="rt"><b>Nova aba Inclusão (PCD)</b><span>Vagas afirmativas filtráveis por tipo de deficiência, perfil acessível, contexto da Lei de Cotas (8.213/91) e selo de Empresa Inclusiva.</span></div></div>
+    <div class="rev-row"><div class="ck">✓</div><div class="rt"><b>Diretório completo no botão Menu</b><span>Painel lateral lista todas as seções agrupadas; barra superior mantém os atalhos sem estourar a largura.</span></div></div>
+    <div class="rev-row"><div class="ck warn">!</div><div class="rt"><b>Corrigido: foco dos botões</b><span>O contorno azul padrão do navegador que aparecia ao clicar (ex.: selecionar candidato) foi substituído por um foco verde discreto no teclado e suprimido no clique de mouse — em toda a plataforma.</span></div></div>
+  </div>
+
+  <div class="callout">
+    <div class="ic">★</div>
+    <p><strong>Posicionamento:</strong> não é um classificado de vagas. É um <strong>hub regional de talento</strong> que combina recrutamento, conteúdo editorial, economia de criadores, trabalho sob demanda, inclusão e novos modelos de contratação por mérito e experiência — tudo dentro da marca MaringáPost.</p>
+  </div>
+
+  <h3>Inventário de funcionalidades</h3>
+  <div class="inv">
+    <div class="inv-row">
+      <div class="k">Vagas <small>núcleo do produto</small></div>
+      <div class="v"><ul>
+        <li>Busca e filtros (área, cidade, ordenação por recência/salário)</li>
+        <li>Modalidade (presencial, híbrido, remoto) e prazo com encerramento automático</li>
+        <li>Compartilhamento social, candidatura e vagas salvas</li>
+      </ul></div>
+    </div>
+    <div class="inv-row">
+      <div class="k">Empresa &amp; Admin</div>
+      <div class="v"><ul>
+        <li>Login, painel, perfil institucional e conta verificada</li>
+        <li>Publicação de vaga assistida por IA; ver/selecionar candidatos; mensagens-padrão por WhatsApp</li>
+        <li>Moderação de conteúdo, gestão de usuários e pacotes (Atrair, Conectar, CrescerPro)</li>
+      </ul></div>
+    </div>
+    <div class="inv-row">
+      <div class="k">Candidato</div>
+      <div class="v"><ul>
+        <li>Cadastro com perfil/currículo, perfil de IA e login próprio</li>
+        <li>Radar de vagas por WhatsApp com consentimento LGPD</li>
+      </ul></div>
+    </div>
+    <div class="inv-row">
+      <div class="k">Conteúdo &amp; comunidade</div>
+      <div class="v"><ul>
+        <li>Carreira &amp; RH — portal editorial</li>
+        <li>Tribuna do Talento — creator economy com destaque para quem viraliza</li>
+      </ul></div>
+    </div>
+    <div class="inv-row">
+      <div class="k">Novos mercados</div>
+      <div class="v"><ul>
+        <li>Na Hora — temporários sob demanda · Talento 50+ — banco sênior</li>
+        <li>Inclusão — vagas afirmativas PCD · Desafios — contratação por competência</li>
+      </ul></div>
+    </div>
+  </div>
+  <p class="muted">Tudo isso é hoje um protótipo de alta fidelidade (front-end). O passo seguinte é dar a ele um <strong>back-end real</strong> — dados, autenticação, pagamentos e IA — com o menor custo possível no início.</p>
+</section>
+
+<!-- ============ 02 — STACK ============ -->
+<section class="page">
+  <span class="sec-num">02 — Ferramentas</span>
+  <h2 class="sec">A stack gratuita recomendada</h2>
+  <p class="sec-sub">Começar com custo R$ 0/mês e só pagar quando o uso (e a receita) justificarem. As escolhas priorizam um caminho único, integrado e fácil de manter.</p>
+
+  <h3>Banco de dados</h3>
+  <div class="stack">
+    <div class="scard pick">
+      <div class="scard-head"><b>Supabase</b><span class="pill rec">Recomendado</span><span class="pill free">Free tier</span></div>
+      <p>PostgreSQL gerenciado com <strong>muito mais que banco</strong>: autenticação pronta, storage de arquivos (logos, currículos), APIs automáticas, realtime, funções serverless e <strong>pgvector</strong> — extensão de busca semântica essencial para os recursos de IA (match candidato↔vaga). Para dados relacionais como vagas, empresas, candidatos e pacotes, o modelo SQL é o ideal.</p>
+      <div class="limits"><span>500 MB DB</span><span>1 GB storage</span><span>50k MAU auth</span><span>pgvector incluído</span></div>
+    </div>
+  </div>
+  <h4>Alternativas válidas</h4>
+  <div class="alts">
+    <div class="alt"><b>Neon</b><span>Postgres serverless com free tier generoso e escala a zero. Ótimo se quiser separar o banco; não inclui auth/storage.</span></div>
+    <div class="alt"><b>Cloudflare D1</b><span>SQLite na borda, gratuito e rápido. Combina com hospedagem Cloudflare; mais novo/limitado.</span></div>
+    <div class="alt"><b>Turso</b><span>SQLite distribuído (libSQL), free tier amplo e baixa latência regional.</span></div>
+    <div class="alt"><b>MongoDB Atlas</b><span>512 MB grátis. Só se preferir NoSQL — menos natural para dados muito relacionais.</span></div>
+  </div>
+
+  <h3>Ambiente para rodar a aplicação</h3>
+  <div class="stack">
+    <div class="scard pick">
+      <div class="scard-head"><b>Vercel</b><span class="pill rec">Recomendado</span><span class="pill free">Hobby grátis</span></div>
+      <p>Hospedagem sob medida para o front-end React do projeto. Deploy automático a cada push no Git, HTTPS e CDN global, e <strong>funções serverless</strong> para a lógica que não ficar no Supabase (integrações, webhooks de pagamento, chamadas de IA). Suporta <strong>rewrites de caminho</strong> — peça-chave para servir em <code>/empregos</code> (seção 04).</p>
+      <div class="limits"><span>Deploy contínuo</span><span>HTTPS + CDN</span><span>Serverless / Edge</span><span>Rewrites de path</span></div>
+    </div>
+  </div>
+  <h4>Alternativas válidas</h4>
+  <div class="alts">
+    <div class="alt"><b>Netlify</b><span>Praticamente equivalente à Vercel para este caso. Escolha por preferência.</span></div>
+    <div class="alt"><b>Cloudflare Pages + Workers</b><span>Limites gratuitos muito generosos; stack completa (Pages + Workers + D1 + R2) se quiser tudo na Cloudflare.</span></div>
+  </div>
+
+  <div class="callout">
+    <div class="ic">✓</div>
+    <p><strong>Combinação base:</strong> front-end React na <strong>Vercel</strong> + dados, login, arquivos e busca semântica no <strong>Supabase</strong>. Dois serviços, ambos com plano gratuito real, cobrindo 100% do MVP sem cartão de crédito.</p>
+  </div>
+
+  <h3>Serviços de apoio (também com free tier)</h3>
+  <table class="tbl">
+    <thead><tr><th>Necessidade</th><th>Ferramenta</th><th>Plano gratuito</th></tr></thead>
+    <tbody>
+      <tr><td><b>E-mail</b> (alertas, confirmações, moderação)</td><td>Resend</td><td>~3.000 e-mails/mês grátis</td></tr>
+      <tr><td><b>WhatsApp</b> (radar, mensagens-padrão)</td><td>Meta WhatsApp Cloud API</td><td>Faixa inicial de conversas/mês sem custo</td></tr>
+      <tr><td><b>Pagamentos</b> (pacotes)</td><td>Stripe ou Mercado Pago</td><td>Sem mensalidade; cobra % por transação</td></tr>
+      <tr><td><b>Monitoramento de erros</b></td><td>Sentry</td><td>Free tier para projetos pequenos</td></tr>
+      <tr><td><b>Analytics</b> (tempo de uso, funil)</td><td>GA4 ou Matomo / Plausible</td><td>Gratuito (Matomo self-host no Supabase/VPS)</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">Pagamentos não têm mensalidade: você paga uma porcentagem só quando recebe.</p>
+</section>
+
+<!-- ============ 03 — IA EMBARCADA ============ -->
+<section class="page">
+  <span class="sec-num">03 — Inteligência</span>
+  <h2 class="sec">As IAs embarcadas na plataforma</h2>
+  <p class="sec-sub">A inteligência não é um recurso único — é uma camada que cresce a cada versão. Abaixo, o catálogo de IAs previstas, o que cada uma faz e o modelo gratuito que pode sustentá-la no início.</p>
+
+  <div class="aigrid">
+    <div class="aicard"><div class="ah"><span class="num">01</span><b>IA Cria Vaga</b></div><p>Gera descrição, requisitos, faixa salarial, pergunta de triagem e texto do anúncio a partir de um briefing curto da empresa.</p><span class="mdl">Modelo: <b>Gemini Flash / Groq (Llama)</b> · generativo</span></div>
+    <div class="aicard"><div class="ah"><span class="num">02</span><b>Match candidato ↔ vaga</b></div><p>Score de compatibilidade por similaridade semântica entre perfil e vaga; alimenta o anel de match e o radar.</p><span class="mdl">Tech: <b>embeddings + pgvector</b> · recuperação</span></div>
+    <div class="aicard"><div class="ah"><span class="num">03</span><b>Extração de currículo</b></div><p>Lê PDF ou LinkedIn e estrutura o perfil (experiências, skills, formação) automaticamente no cadastro.</p><span class="mdl">Modelo: <b>Gemini (visão/texto)</b> · extração</span></div>
+    <div class="aicard"><div class="ah"><span class="num">04</span><b>Triagem por Resposta Ativa</b></div><p>Transcreve a resposta de 30s (áudio/vídeo) e avalia clareza e aderência, filtrando candidaturas em massa.</p><span class="mdl">Modelo: <b>Whisper + LLM</b> · transcrição+análise</span></div>
+    <div class="aicard"><div class="ah"><span class="num">05</span><b>Ranking de Desafios</b></div><p>Avalia entregas de provas práticas e ordena candidatos por competência demonstrada, com justificativa.</p><span class="mdl">Modelo: <b>LLM com rubrica</b> · avaliação</span></div>
+    <div class="aicard"><div class="ah"><span class="num">06</span><b>Score de intencionalidade</b></div><p>Estima o interesse real do candidato a partir de sinais de comportamento, priorizando quem tem maior intenção.</p><span class="mdl">Tech: <b>features + LLM</b> · classificação</span></div>
+    <div class="aicard"><div class="ah"><span class="num">07</span><b>Curadoria editorial</b></div><p>Apoia a moderação da Tribuna/Carreira &amp; RH, sugere pautas e destaca automaticamente conteúdo que viraliza.</p><span class="mdl">Modelo: <b>LLM + métricas</b> · moderação</span></div>
+    <div class="aicard"><div class="ah"><span class="num">08</span><b>Assistente de Inclusão (PCD)</b></div><p>Cruza adaptações necessárias do candidato com a acessibilidade declarada da vaga e sugere texto inclusivo.</p><span class="mdl">Modelo: <b>LLM + regras</b> · recomendação</span></div>
+    <div class="aicard"><div class="ah"><span class="num">09</span><b>Copiloto de carreira</b></div><p>Chat que orienta o candidato (currículo, faixa salarial, preparo) usando os dados reais do mercado regional.</p><span class="mdl">Modelo: <b>LLM + RAG (pgvector)</b> · conversacional</span></div>
+    <div class="aicard"><div class="ah"><span class="num">10</span><b>Agente de recrutamento</b></div><p>Visão futura: conduz a busca ativa, pré-seleciona e agenda — o recrutador só aprova. O ápice da inteligência.</p><span class="mdl">Modelo: <b>LLM + ferramentas (agente)</b> · autônomo</span></div>
+  </div>
+
+  <div class="callout teal">
+    <div class="ic">✦</div>
+    <p><strong>Estratégia de custo da IA:</strong> começar com cotas gratuitas (Gemini Flash, Groq) para validar; usar <strong>embeddings + pgvector</strong> para o match (barato e roda no próprio banco); e só migrar para modelos pagos/maiores nos recursos que comprovarem retorno. Toda chamada de IA passa por uma função serverless — fácil de trocar de provedor sem mexer no front-end.</p>
+  </div>
+</section>
+
+<!-- ============ 04 — ACOPLAMENTO AO DOMÍNIO ============ -->
+<section class="page">
+  <span class="sec-num">04 — Integração</span>
+  <h2 class="sec">Acoplar ao maringapost.com.br/empregos</h2>
+  <p class="sec-sub">A plataforma deve viver <strong>dentro</strong> do domínio principal — em <code>/empregos</code> — para que toda a navegação compute tempo de uso e audiência no mesmo domínio do jornal, sem fragmentar métricas nem autoridade de SEO.</p>
+
+  <div style="text-align:center;margin:24px 0">
+    <span class="urlbar"><span class="base">maringapost.com.br</span><span class="path">/empregos</span></span>
+  </div>
+
+  <h3>Por que subdiretório, e não subdomínio</h3>
+  <ul class="bul">
+    <li><b>Mesma origem</b> — <code>/empregos</code> é o mesmo host: cookies, sessão e analytics são compartilhados sem configuração de cross-domain.</li>
+    <li><b>Tempo de uso somado</b> — a sessão do leitor que vem do jornal continua na mesma propriedade; o tempo em /empregos entra no total do domínio.</li>
+    <li><b>SEO herdado</b> — um subdiretório herda a autoridade do domínio principal; um subdomínio (empregos.maringapost...) é tratado como site à parte.</li>
+    <li><b>Marca única</b> — o usuário nunca "sai" do MaringáPost.</li>
+  </ul>
+
+  <h3>Como servir o app em /empregos</h3>
+  <div class="deploy">
+    <div class="deploy-row"><div class="dk">Roteamento</div><div class="dv"><b>Reverse proxy</b> (recomendado): o servidor/edge do maringapost.com.br encaminha tudo sob <code>/empregos/*</code> para a aplicação na Vercel. Alternativa: <b>rewrites</b> da Vercel/Cloudflare se o site principal já estiver lá.</div></div>
+    <div class="deploy-row"><div class="dk">Front-end</div><div class="dv">App React buildado com <b>base path <code>/empregos</code></b> (router com <code>basename</code> e assets sob esse prefixo), para que links e recursos resolvam corretamente.</div></div>
+    <div class="deploy-row"><div class="dk">API &amp; dados</div><div class="dv">Funções serverless sob <code>/empregos/api/*</code> e Supabase como back-end — todas as chamadas saem do mesmo host.</div></div>
+    <div class="deploy-row"><div class="dk">Analytics</div><div class="dv">Uma <b>única propriedade GA4/Matomo</b> do domínio; o app dispara page views de SPA em cada troca de tela. Tempo de uso e funil ficam consolidados com o resto do jornal.</div></div>
+    <div class="deploy-row"><div class="dk">Sessão / SSO</div><div class="dv">Cookies de primeira parte no domínio raiz permitem, no futuro, login único entre jornal e empregos.</div></div>
+  </div>
+
+  <div class="callout indigo">
+    <div class="ic">→</div>
+    <p><strong>Resumo:</strong> hospede o app na Vercel, mas exponha-o em <code>maringapost.com.br/empregos</code> via reverse proxy/rewrite. Mesma origem = mesma audiência, mesmo SEO, mesma conta de analytics. O leitor flui do jornal para as vagas sem perceber a troca — e o tempo de navegação soma para o domínio principal.</p>
+  </div>
+</section>
+
+<!-- ============ 05 — ROADMAP ============ -->
+<section class="page">
+  <span class="sec-num">05 — Roadmap</span>
+  <h2 class="sec">Versões evolutivas — mais inteligência a cada entrega</h2>
+  <p class="sec-sub">Cada versão entrega valor sozinha e sobe um degrau de inteligência: começa em regras simples e termina em agentes autônomos. A barra "Inteligência" indica quanto de IA cada versão já carrega.</p>
+
+  <!-- v0 -->
+  <div class="phase f0">
+    <div class="phase-dot"></div>
+    <div class="phase-head"><span class="phase-tag">v0</span><h3>Fundação</h3><span class="complex cx1">Base técnica</span></div>
+    <p class="phase-goal">Esqueleto invisível ao usuário: infraestrutura, contas, modelo de dados e deploy em /empregos.</p>
+    <div class="iq"><span class="iq-l">Inteligência</span><span class="bar"><i style="width:6%"></i></span><span class="iq-v">nenhuma</span></div>
+    <div class="phase-grid">
+      <div class="pf"><span class="n">01</span><span>Projetos na <b>Vercel</b> + <b>Supabase</b> ligados ao Git</span></div>
+      <div class="pf"><span class="n">02</span><span>Modelagem SQL: empresas, usuários, vagas, candidaturas, pacotes</span></div>
+      <div class="pf"><span class="n">03</span><span>Migrar protótipo para build (Vite) com base <code>/empregos</code></span></div>
+      <div class="pf"><span class="n">04</span><span>Reverse proxy + analytics no domínio principal</span></div>
+    </div>
+    <div class="phase-foot"><span class="tagk">Supabase</span><span class="tagk">Vercel</span><span class="tagk">Reverse proxy</span><span class="tagk">RLS</span></div>
+  </div>
+
+  <!-- v1.0 -->
+  <div class="phase f1">
+    <div class="phase-dot"></div>
+    <div class="phase-head"><span class="phase-tag">v1.0 · MVP</span><h3>O quadro de vagas que funciona</h3><span class="complex cx1">Essencial</span></div>
+    <p class="phase-goal">Empresas publicam, candidatos encontram e se candidatam, o admin modera. Lançável e útil por si só.</p>
+    <div class="iq"><span class="iq-l">Inteligência</span><span class="bar"><i style="width:18%"></i></span><span class="iq-v">busca por regras</span></div>
+    <div class="phase-grid">
+      <div class="pf"><span class="n">01</span><span><b>Autenticação</b> real de empresa, candidato e admin</span></div>
+      <div class="pf"><span class="n">02</span><span><b>Publicação de vagas</b> com modalidade e prazo</span></div>
+      <div class="pf"><span class="n">03</span><span><b>Busca e filtros</b> persistidos no banco</span></div>
+      <div class="pf"><span class="n">04</span><span><b>Candidatura</b> e vagas salvas</span></div>
+      <div class="pf"><span class="n">05</span><span><b>Admin</b>: moderação e gestão de usuários</span></div>
+      <div class="pf"><span class="n">06</span><span><b>Encerramento automático</b> + alerta por e-mail</span></div>
+    </div>
+    <div class="phase-foot"><span class="tagk">Auth</span><span class="tagk">CRUD vagas</span><span class="tagk">Resend</span><span class="tagk">Cron</span></div>
+  </div>
+
+  <!-- v1.5 -->
+  <div class="phase f1">
+    <div class="phase-dot"></div>
+    <div class="phase-head"><span class="phase-tag">v1.5 · Primeira IA</span><h3>A plataforma começa a pensar</h3><span class="complex cx2">Intermediário</span></div>
+    <p class="phase-goal">As duas IAs generativas mais simples e de maior impacto imediato no preenchimento de vagas e perfis.</p>
+    <div class="iq"><span class="iq-l">Inteligência</span><span class="bar"><i style="width:35%"></i></span><span class="iq-v">IA generativa</span></div>
+    <div class="phase-grid">
+      <div class="pf"><span class="n">01</span><span><b>IA Cria Vaga</b> conectada a modelo real (Gemini/Groq)</span></div>
+      <div class="pf"><span class="n">02</span><span><b>Extração de currículo</b> de PDF/LinkedIn no cadastro</span></div>
+    </div>
+    <div class="phase-foot"><span class="tagk ai">Gemini / Groq</span><span class="tagk ai">Serverless IA</span></div>
+  </div>
+
+  <!-- v2.0 -->
+  <div class="phase f2">
+    <div class="phase-dot"></div>
+    <div class="phase-head"><span class="phase-tag">v2.0 · Monetização + Match</span><h3>Receita e recomendação semântica</h3><span class="complex cx2">Intermediário</span></div>
+    <p class="phase-goal">Liga a receita e introduz o match real candidato↔vaga, que passa a alimentar o radar.</p>
+    <div class="iq"><span class="iq-l">Inteligência</span><span class="bar"><i style="width:52%"></i></span><span class="iq-v">match semântico</span></div>
+    <div class="phase-grid">
+      <div class="pf"><span class="n">01</span><span><b>Pacotes</b> com limite de vagas/mês + <b>pagamentos</b></span></div>
+      <div class="pf"><span class="n">02</span><span><b>Match candidato↔vaga</b> com embeddings + pgvector</span></div>
+      <div class="pf"><span class="n">03</span><span><b>Radar por WhatsApp</b> inteligente (LGPD)</span></div>
+      <div class="pf"><span class="n">04</span><span><b>Perfil institucional</b> + conta verificada</span></div>
+    </div>
+    <div class="phase-foot"><span class="tagk">Stripe / MercadoPago</span><span class="tagk ai">pgvector</span><span class="tagk">WhatsApp API</span></div>
+  </div>
+
+  <!-- v2.5 -->
+  <div class="phase f3">
+    <div class="phase-dot"></div>
+    <div class="phase-head"><span class="phase-tag">v2.5 · Conteúdo</span><h3>Audiência e curadoria assistida</h3><span class="complex cx2">Intermediário</span></div>
+    <p class="phase-goal">Usa o jornalismo e a voz dos profissionais para atrair tráfego orgânico — o trunfo de nascer dentro de um veículo de notícias.</p>
+    <div class="iq"><span class="iq-l">Inteligência</span><span class="bar"><i style="width:62%"></i></span><span class="iq-v">curadoria por IA</span></div>
+    <div class="phase-grid">
+      <div class="pf"><span class="n">01</span><span><b>Carreira &amp; RH</b>: CMS editorial com publicação</span></div>
+      <div class="pf"><span class="n">02</span><span><b>Tribuna do Talento</b>: artigos e portfólio</span></div>
+      <div class="pf"><span class="n">03</span><span><b>Curadoria IA</b>: destaque automático de quem viraliza</span></div>
+      <div class="pf"><span class="n">04</span><span><b>SEO</b> de subdiretório + métricas de leitura</span></div>
+    </div>
+    <div class="phase-foot"><span class="tagk">CMS</span><span class="tagk">SEO</span><span class="tagk ai">Moderação IA</span></div>
+  </div>
+
+  <!-- v3.0 -->
+  <div class="phase f4">
+    <div class="phase-dot"></div>
+    <div class="phase-head"><span class="phase-tag">v3.0 · Triagem inteligente</span><h3>A IA filtra e prioriza</h3><span class="complex cx3">Avançado</span></div>
+    <p class="phase-goal">A plataforma deixa de só recomendar e passa a avaliar — economizando o tempo do recrutador.</p>
+    <div class="iq"><span class="iq-l">Inteligência</span><span class="bar"><i style="width:76%"></i></span><span class="iq-v">avaliação por IA</span></div>
+    <div class="phase-grid">
+      <div class="pf"><span class="n">01</span><span><b>Triagem por Resposta Ativa</b> (transcrição + análise de 30s)</span></div>
+      <div class="pf"><span class="n">02</span><span><b>Score de intencionalidade</b> do candidato</span></div>
+      <div class="pf"><span class="n">03</span><span><b>Assistente de Inclusão (PCD)</b>: match de adaptações</span></div>
+    </div>
+    <div class="phase-foot"><span class="tagk ai">Whisper</span><span class="tagk ai">LLM</span><span class="tagk">Acessibilidade</span></div>
+  </div>
+
+  <!-- v4.0 -->
+  <div class="phase f4">
+    <div class="phase-dot"></div>
+    <div class="phase-head"><span class="phase-tag">v4.0 · Marketplaces</span><h3>Os diferenciais que ninguém na região tem</h3><span class="complex cx3">Avançado</span></div>
+    <p class="phase-goal">Marketplaces vivos, com match, geolocalização, chat e reputação — sustentados pela base de usuários e dados já existente.</p>
+    <div class="iq"><span class="iq-l">Inteligência</span><span class="bar"><i style="width:88%"></i></span><span class="iq-v">match multi-fator</span></div>
+    <div class="phase-grid">
+      <div class="pf"><span class="n">01</span><span><b>Desafios</b> com avaliação e ranking por IA</span></div>
+      <div class="pf"><span class="n">02</span><span><b>Na Hora</b>: temporários com geo-match e disponibilidade</span></div>
+      <div class="pf"><span class="n">03</span><span><b>Talento 50+</b>: banco sênior com formatos de colaboração</span></div>
+      <div class="pf"><span class="n">04</span><span><b>Chat e avaliações</b> entre as partes (realtime)</span></div>
+    </div>
+    <div class="phase-foot"><span class="tagk ai">Ranking IA</span><span class="tagk">Realtime</span><span class="tagk">Geolocalização</span><span class="tagk">Reputação</span></div>
+  </div>
+
+  <!-- v5.0 -->
+  <div class="phase f5">
+    <div class="phase-dot"></div>
+    <div class="phase-head"><span class="phase-tag">v5.0 · Agentes</span><h3>O copiloto de talento</h3><span class="complex cx4">Visionário</span></div>
+    <p class="phase-goal">A inteligência vira protagonista: agentes que conduzem busca, triagem e orientação — humanos só aprovam.</p>
+    <div class="iq"><span class="iq-l">Inteligência</span><span class="bar"><i style="width:100%"></i></span><span class="iq-v">agentes autônomos</span></div>
+    <div class="phase-grid">
+      <div class="pf"><span class="n">01</span><span><b>Copiloto de carreira</b> (chat com RAG sobre o mercado regional)</span></div>
+      <div class="pf"><span class="n">02</span><span><b>Agente de recrutamento</b>: busca ativa, pré-seleção e agenda</span></div>
+      <div class="pf"><span class="n">03</span><span><b>Insights de mercado</b> automáticos para o jornalismo de dados</span></div>
+    </div>
+    <div class="phase-foot"><span class="tagk ai">Agentes LLM</span><span class="tagk ai">RAG</span><span class="tagk ai">Tool use</span></div>
+  </div>
+
+  <div class="callout">
+    <div class="ic">→</div>
+    <p><strong>Por que esta ordem?</strong> v0–v1 provam o produto sem custo. v1.5 injeta a primeira IA de alto impacto. v2 liga a receita e o match. v2.5 traz tráfego barato via conteúdo. De v3 em diante, a IA passa de recomendar para avaliar e agir — sempre com base de usuários, dados e caixa para sustentá-la. Cada versão sobe a barra de inteligência sem nunca quebrar o que já funciona.</p>
+  </div>
+
+  <div class="foot-note">MaringáPost Empregos · Revisão Técnica &amp; Roadmap · v2.0 — Junho 2026. Estimativas de free tier conforme planos vigentes dos fornecedores na data; reavaliar antes de escalar. Disponibilidade de cotas gratuitas de IA varia por provedor.</div>
+</section>
+
+<script>
+(async () => {
+  if (!document.title || !document.title.trim()) document.title = "Revisao Tecnica e Roadmap v2";
+  // Prepend so page-supplied @page / break rules (deck-stage's margin:0,
+  // author CSS) keep source-order precedence over the baseline.
+  const baseCss = document.createElement('style');
+  baseCss.textContent = "@media print {\n  @page { margin: 0.5cm; }\n  figure, table { break-inside: avoid; }\n  *, *::before, *::after {\n    print-color-adjust: exact; -webkit-print-color-adjust: exact;\n    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;\n    animation-delay: -99s !important; animation-duration: .001s !important;\n    animation-iteration-count: 1 !important; animation-fill-mode: both !important;\n    animation-play-state: running !important; transition-duration: 0s !important;\n  }\n}";
+  document.head.prepend(baseCss);
+  if (document.readyState === 'loading') {
+    await new Promise((r) => document.addEventListener('DOMContentLoaded', r, { once: true }));
+  }
+  let ds = document.querySelector('deck-stage');
+  // whenDefined never resolves when nothing registers the element, so only
+  // await it when a <deck-stage> tag exists (and race a timeout regardless).
+  if (ds && !customElements.get('deck-stage')) {
+    try {
+      await Promise.race([
+        customElements.whenDefined('deck-stage'),
+        new Promise((r) => setTimeout(r, 3000)),
+      ]);
+    } catch (e) {}
+    ds = document.querySelector('deck-stage');
+  }
+  // dc-runtime assigns window.DCLogic at init and mounts into #dc-root on
+  // DOMContentLoaded; settle on that subtree so React has rendered before
+  // print(). Non-DC pages fall through to weighing body.
+  const isDc = !ds && 'DCLogic' in window;
+  const settleRoot = ds || (isDc ? document.getElementById('dc-root') : null) || document.body;
+  if (settleRoot) {
+    // Weigh only content children — skip script/style/template so inline
+    // Babel/CSS doesn't register as stable "content" before the framework
+    // has mounted anything.
+    const MEDIA = 'img,svg,canvas,video,picture,iframe,embed,object';
+    const weigh = () => {
+      let text = 0, media = 0;
+      for (const c of settleRoot.children) {
+        const t = c.tagName;
+        if (t === 'SCRIPT' || t === 'STYLE' || t === 'TEMPLATE') continue;
+        text += (c.textContent || '').trim().length;
+        media += c.querySelectorAll(MEDIA).length + (c.matches(MEDIA) ? 1 : 0);
+      }
+      return text + media * 100;
+    };
+    // "Non-zero and stable" alone is not sufficient to mean rendered: generic
+    // body can carry a static shell while async main content is pending, and
+    // #dc-root can carry the root DC's static text while child refs are still
+    // .sc-placeholder boxes. Gate generic on readyState 'complete', and never
+    // accept stability while a dc-runtime placeholder is present.
+    const isGeneric = settleRoot === document.body;
+    const deadline = Date.now() + 15000;
+    let last = -1, stable = 0;
+    while (Date.now() < deadline) {
+      const n = weigh();
+      const ready =
+        (!isGeneric || document.readyState === 'complete') &&
+        !settleRoot.querySelector('.sc-placeholder');
+      if (n > 0 && n === last && ready) { if (++stable >= 2) break; } else { stable = 0; }
+      last = n;
+      await new Promise((r) => setTimeout(r, 250));
+    }
+  }
+  // Reveal content gated on scroll or visibility before printing. Lazy <img>,
+  // IntersectionObserver fade-ins, and collapsed <details> don't render while
+  // off-screen, so a long page would print with them blank or closed. Open
+  // every <details>, force native-lazy images eager, and scroll the document
+  // through its full height to trip lazy-load + IO; then wait (bounded) for the
+  // newly-triggered images. Inert for deck-stage (slides aren't scroll-gated).
+  try {
+    for (const d of document.querySelectorAll('details')) d.open = true;
+    for (const img of document.querySelectorAll('img[loading="lazy"]'))
+      img.loading = 'eager';
+    const scroller = document.scrollingElement || document.documentElement;
+    const full = Math.max(scroller.scrollHeight, document.body.scrollHeight);
+    const step = window.innerHeight || 800;
+    for (let y = 0; y <= full; y += step) {
+      window.scrollTo(0, y);
+      await new Promise((r) => requestAnimationFrame(r));
+    }
+    window.scrollTo(0, 0);
+    await Promise.race([
+      Promise.all(
+        [...document.images].map((img) =>
+          img.complete
+            ? null
+            : new Promise((res) => {
+                img.addEventListener('load', res, { once: true });
+                img.addEventListener('error', res, { once: true });
+              })
+        )
+      ),
+      new Promise((r) => setTimeout(r, 4000)),
+    ]);
+  } catch (e) {}
+  try { await document.fonts.ready; } catch (e) {}
+  // Jump every animation to its end state so print() never captures a slide
+  // mid-entrance. Ordering matters: the 0s-transition style must be live
+  // BEFORE data-deck-active is set so attribute-keyed transitions don't
+  // start a (now-0s) run from the pre-active base.
+  const st = document.createElement('style');
+  st.textContent = '*,*::before,*::after{animation-delay:-99s !important;animation-duration:.001s !important;animation-iteration-count:1 !important;animation-fill-mode:both !important;animation-play-state:running !important;transition-duration:0s !important}';
+  document.head.appendChild(st);
+  for (const d of document.querySelectorAll('deck-stage')) {
+    for (const c of d.children) {
+      const t = c.tagName;
+      if (t === 'SCRIPT' || t === 'STYLE' || t === 'TEMPLATE') continue;
+      c.setAttribute('data-deck-active', '');
+    }
+  }
+  // Re-append deck-stage's @page last so no author @page can add a margin and
+  // spill each full-bleed slide onto two sheets. Backstop for old copies.
+  if (ds) {
+    let pg = document.getElementById('deck-stage-print-page');
+    if (!pg) {
+      pg = document.createElement('style');
+      pg.textContent = '@page{size:' + (+ds.getAttribute('width') || 1920) +
+        'px ' + (+ds.getAttribute('height') || 1080) + 'px;margin:0}';
+    }
+    document.body.appendChild(pg);
+  }
+  try {
+    const sweep = () => {
+      for (const a of document.getAnimations()) {
+        try { a.finish(); } catch (e) {
+          try { a.currentTime = (a.effect && a.effect.getComputedTiming().duration) || 0; a.pause(); } catch (e2) {}
+        }
+      }
+    };
+    sweep();
+    await new Promise((r) => requestAnimationFrame(r));
+    sweep();
+    await new Promise((r) => requestAnimationFrame(r));
+  } catch (e) {}
+  // Relax break-inside on oversized elements. An element taller than a
+  // printable page can't honor break-inside: avoid — browsers either overflow
+  // it or push it whole to the next page, leaving a blank gap, then break it
+  // anyway at an arbitrary point. After the final layout (content revealed,
+  // animations jumped), find elements taller than a page that still compute
+  // break-inside: avoid and reset them to auto, so the browser breaks them at
+  // their children's boundaries instead (children keep their own avoid). PAGE_PX
+  // is a conservative portrait estimate at 96 CSS px/in — Letter/A4 usable
+  // height minus our 0.5in margins — so only clearly-oversized elements are
+  // touched and under-page elements still stay whole. Skipped for decks, whose
+  // slides are sized to the page.
+  try {
+    if (!document.querySelector('deck-stage')) {
+      const PAGE_PX = 1024;
+      // Our print defaults add a body padding inset only when we also zero the
+      // @page margin; computed style can't tell us (it reports screen media),
+      // so read the injected rule directly.
+      const defaults = document.querySelector('style[data-omelette-print-defaults]');
+      const pageInset = /body\s*\{[^}]*padding/.test(defaults ? defaults.textContent || '' : '');
+      const SEL = 'section,article,figure,table,pre,blockquote,[class~="card" i],[class~="page" i],[class~="sheet" i]';
+      for (const el of document.body.querySelectorAll(SEL)) {
+        if (el instanceof HTMLElement && el.offsetHeight > PAGE_PX) {
+          el.setAttribute('data-om-oversized', '');
+          // Fake-paged docs simulate sheets with over-tall break-after:page
+          // boxes; honoring the break spills half-blank pages and ends a
+          // colored box mid-sheet. Flow them, and (only when we own the page
+          // inset) drop the redundant padding/background via the rule below.
+          const cs = getComputedStyle(el);
+          if (cs.breakAfter === 'page' || cs.pageBreakAfter === 'always') {
+            el.setAttribute('data-om-fakepage', '');
+          }
+        }
+      }
+      const ost = document.createElement('style');
+      ost.textContent = '@media print{' +
+        '[data-om-oversized]{break-inside:auto !important;page-break-inside:auto !important}' +
+        '[data-om-fakepage]{break-after:auto !important;page-break-after:auto !important}' +
+        (pageInset ? '[data-om-fakepage]{padding:0 !important;background:none !important}' : '') +
+        '}';
+      document.head.appendChild(ost);
+    }
+  } catch (e) {}
+  // macOS Preview renders Skia-PDF Luminosity soft-masks as opaque grey boxes;
+  // swap the CSS that triggers them for Preview-safe forms.
+  try {
+    for (const el of document.body.querySelectorAll('*')) {
+      const cs = getComputedStyle(el);
+
+      if (cs.boxShadow !== 'none' && cs.filter === 'none') {
+        const outs = [], kept = [];
+        for (const s of cs.boxShadow.split(/,(?![^(]*[)])/)) {
+          const t = s.trim();
+          const m = t.match(/^(rgba?[(][^)]+[)]) (-?[0-9.]+px) (-?[0-9.]+px) ([0-9.]+px) -?[0-9.]+px$/);
+          if (m && parseFloat(m[4]) > 0) outs.push('drop-shadow(' + m[2] + ' ' + m[3] + ' ' + m[4] + ' ' + m[1] + ')');
+          else kept.push(t);
+        }
+        if (outs.length) {
+          el.style.setProperty('filter', outs.join(' '), 'important');
+          el.style.setProperty('box-shadow', kept.join(', ') || 'none', 'important');
+        }
+      }
+
+      const mask = cs.maskImage && cs.maskImage !== 'none' ? cs.maskImage : cs.webkitMaskImage;
+      if (mask && mask !== 'none' && cs.filter === 'none') el.style.setProperty('filter', 'opacity(1)', 'important');
+    }
+  } catch (e) {}
+  setTimeout(() => { try { window.print(); } catch (e) {} }, 200);
+})();
+</script>
+</body>
+</html>
