@@ -29,7 +29,7 @@ export function SiteFooter() {
           <div>
             <h4>MaringáPost</h4>
             <Link href="/conteudo">Carreira &amp; RH</Link>
-            <Link href="/">Sobre</Link>
+            <Link href="/privacidade">Privacidade</Link>
             <Link href="/admin">Moderação (admin)</Link>
           </div>
         </div>

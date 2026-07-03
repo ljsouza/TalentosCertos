@@ -1,4 +1,5 @@
 import { supabase, supabaseEnabled } from "@/lib/supabase";
+import { currentOrgId } from "@/lib/tenant";
 import type { TribunaPost } from "@/data/types";
 
 const MOCK: TribunaPost[] = [
@@ -12,14 +13,20 @@ const MOCK: TribunaPost[] = [
 
 export async function getTribuna(): Promise<TribunaPost[]> {
   if (!supabaseEnabled || !supabase) return MOCK;
-  const { data, error } = await supabase.from("tribuna").select("*").order("leituras", { ascending: false });
+  const orgId = await currentOrgId();
+  let query = supabase.from("tribuna").select("*");
+  if (orgId) query = query.eq("org_id", orgId);
+  const { data, error } = await query.order("leituras", { ascending: false });
   if (error) throw error;
   return data as TribunaPost[];
 }
 
 export async function tribunaById(id: string): Promise<TribunaPost | null> {
   if (!supabaseEnabled || !supabase) return MOCK.find((t) => t.id === id) ?? null;
-  const { data, error } = await supabase.from("tribuna").select("*").eq("id", id).maybeSingle();
+  const orgId = await currentOrgId();
+  let query = supabase.from("tribuna").select("*").eq("id", id);
+  if (orgId) query = query.eq("org_id", orgId);
+  const { data, error } = await query.maybeSingle();
   if (error) throw error;
   return (data as TribunaPost) ?? null;
 }

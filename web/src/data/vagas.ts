@@ -1,4 +1,5 @@
 import { supabase, supabaseEnabled } from "@/lib/supabase";
+import { currentOrgId } from "@/lib/tenant";
 import type { VagaComEmpresa } from "@/data/types";
 
 // ── PADRÃO-CHAVE DA ARQUITETURA ────────────────────────────────────────────
@@ -46,18 +47,20 @@ const MOCK_VAGAS: VagaComEmpresa[] = [
 
 export async function getVagas(): Promise<VagaComEmpresa[]> {
   if (!supabaseEnabled || !supabase) return MOCK_VAGAS;
-  const { data, error } = await supabase
-    .from("vagas")
-    .select(SELECT)
-    .eq("status", "aberta")
-    .order("criado_em", { ascending: false });
+  const orgId = await currentOrgId();
+  let query = supabase.from("vagas").select(SELECT).eq("status", "aberta");
+  if (orgId) query = query.eq("org_id", orgId);
+  const { data, error } = await query.order("criado_em", { ascending: false });
   if (error) throw error;
   return data as unknown as VagaComEmpresa[];
 }
 
 export async function vagaById(id: string): Promise<VagaComEmpresa | null> {
   if (!supabaseEnabled || !supabase) return MOCK_VAGAS.find((v) => v.id === id) ?? null;
-  const { data, error } = await supabase.from("vagas").select(SELECT).eq("id", id).maybeSingle();
+  const orgId = await currentOrgId();
+  let query = supabase.from("vagas").select(SELECT).eq("id", id);
+  if (orgId) query = query.eq("org_id", orgId);
+  const { data, error } = await query.maybeSingle();
   if (error) throw error;
   return (data as unknown as VagaComEmpresa) ?? null;
 }

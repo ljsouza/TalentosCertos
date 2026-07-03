@@ -13,6 +13,40 @@ export async function createVaga(_prev: Estado, formData: FormData): Promise<Est
   const { empresa, supabase } = await requireEmpresa();
   if (!empresa) return { erro: "Empresa não encontrada para esta conta." };
 
+  // Conta só publica depois de aprovada pelo MaringáPost.
+  if (empresa.status !== "ativa") {
+    return {
+      erro:
+        empresa.status === "pendente"
+          ? "Sua conta está em análise. A publicação de vagas libera após a aprovação do MaringáPost."
+          : "Sua conta está bloqueada. Fale com o MaringáPost para regularizar.",
+    };
+  }
+
+  // Cobrança manual: exige um plano ativo e respeita o limite mensal de vagas.
+  if (!empresa.pacote_id) {
+    return { erro: "Nenhum plano ativo na sua conta. Fale com o MaringáPost para ativar um pacote." };
+  }
+  const { data: pacote } = await supabase
+    .from("pacotes")
+    .select("nome,vagas_limite")
+    .eq("id", empresa.pacote_id)
+    .maybeSingle();
+  const limite: number | null = pacote?.vagas_limite ?? null; // null = ilimitado
+  if (limite != null) {
+    const inicioMes = new Date();
+    inicioMes.setDate(1);
+    inicioMes.setHours(0, 0, 0, 0);
+    const { count } = await supabase
+      .from("vagas")
+      .select("id", { count: "exact", head: true })
+      .eq("empresa_id", empresa.id)
+      .gte("criado_em", inicioMes.toISOString());
+    if ((count ?? 0) >= limite) {
+      return { erro: `Você atingiu o limite de ${limite} vaga(s)/mês do plano ${pacote?.nome ?? ""}. Faça upgrade para publicar mais.` };
+    }
+  }
+
   const titulo = String(formData.get("titulo") || "").trim();
   if (!titulo) return { erro: "Informe o título da vaga." };
 

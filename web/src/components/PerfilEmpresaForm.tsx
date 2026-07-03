@@ -1,12 +1,30 @@
 "use client";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { atualizarPerfilEmpresa } from "@/app/painel-empresa/actions";
+import { uploadLogo } from "@/lib/storage-upload";
 import type { EmpresaPerfil } from "@/data/types";
 
 type Props = { empresa: EmpresaPerfil };
 
 export function PerfilEmpresaForm({ empresa: e }: Props) {
   const [state, formAction, pending] = useActionState(atualizarPerfilEmpresa, undefined);
+  const [logoUrl, setLogoUrl] = useState<string>(e.logo_url ?? "");
+  const [logoLoading, setLogoLoading] = useState(false);
+  const [logoErro, setLogoErro] = useState<string | null>(null);
+
+  const onLogo = async (ev: React.ChangeEvent<HTMLInputElement>) => {
+    const file = ev.target.files?.[0];
+    if (!file) return;
+    setLogoErro(null);
+    setLogoLoading(true);
+    try {
+      setLogoUrl(await uploadLogo(e.id, file));
+    } catch (err) {
+      setLogoErro(err instanceof Error ? err.message : "Falha ao enviar a logo.");
+    } finally {
+      setLogoLoading(false);
+    }
+  };
 
   return (
     <form action={formAction} className="vaga-form">
@@ -22,10 +40,21 @@ export function PerfilEmpresaForm({ empresa: e }: Props) {
         <label>Endereço<input name="endereco" defaultValue={e.endereco ?? ""} placeholder="Maringá, PR" /></label>
       </div>
 
-      <div className="vf-row">
-        <label>Site<input name="site" type="url" defaultValue={e.site ?? ""} placeholder="https://suaempresa.com.br" /></label>
-        <label>Logo (URL)<input name="logo_url" type="url" defaultValue={e.logo_url ?? ""} placeholder="https://.../logo.png" /></label>
-      </div>
+      <label>Site<input name="site" type="url" defaultValue={e.site ?? ""} placeholder="https://suaempresa.com.br" /></label>
+
+      <label>
+        Logo da empresa
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 6 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element -- logo externa (Supabase Storage); next/image exigiria remotePatterns por projeto */}
+          {logoUrl && <img src={logoUrl} alt="Logo atual" style={{ width: 48, height: 48, objectFit: "contain", borderRadius: 8, border: "1px solid var(--line)" }} />}
+          <label className="btn btn-ghost btn-sm" style={{ cursor: "pointer" }}>
+            {logoLoading ? "Enviando…" : logoUrl ? "Trocar logo" : "Enviar logo"}
+            <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onChange={onLogo} style={{ display: "none" }} disabled={logoLoading} />
+          </label>
+        </div>
+      </label>
+      {logoErro && <p className="auth-erro" role="alert">{logoErro}</p>}
+      <input type="hidden" name="logo_url" value={logoUrl} />
 
       <label>Resumo <small>(uma frase, aparece nos cards)</small><textarea name="sobre" rows={2} defaultValue={e.sobre ?? ""} placeholder="O que sua empresa faz, em uma frase." /></label>
       <label>Sobre a empresa<textarea name="sobre_longo" rows={4} defaultValue={e.sobre_longo ?? ""} placeholder="História, cultura e o que torna o trabalho aqui especial." /></label>

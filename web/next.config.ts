@@ -1,14 +1,24 @@
 import type { NextConfig } from "next";
 
-// Produção: servido em maringapost.com.br/empregos via reverse proxy.
-// basePath faz o Next gerar todas as rotas e assets sob /empregos.
+// O mesmo repositório gera dois builds (basePath é fixado em build e embutido
+// no bundle do cliente — não muda em runtime):
+//   • Deploy MaringáPost: NEXT_PUBLIC_BASE_PATH ausente → '/empregos' (embutido
+//     em maringapost.com.br/empregos via reverse proxy).
+//   • Deploy SaaS: NEXT_PUBLIC_BASE_PATH='' → sem prefixo (serve na raiz;
+//     tenant resolvido pelo subdomínio <slug>.talentoscertos.com.br).
+const rawBasePath = process.env.NEXT_PUBLIC_BASE_PATH;
+const basePath = rawBasePath === undefined ? "/empregos" : rawBasePath;
+
 const nextConfig: NextConfig = {
-  basePath: "/empregos",
   reactStrictMode: true,
-  // Conveniência: a raiz redireciona para /empregos (em produção, o site
-  // principal é quem responde a / — isto só vale no domínio direto do app).
+  ...(basePath ? { basePath } : {}),
+  // No deploy com prefixo, a raiz do domínio direto do app redireciona para o
+  // prefixo (em produção quem responde a / é o site principal). Sem prefixo
+  // (SaaS), não há redirect.
   async redirects() {
-    return [{ source: "/", destination: "/empregos", basePath: false, permanent: false }];
+    return basePath
+      ? [{ source: "/", destination: basePath, basePath: false, permanent: false }]
+      : [];
   },
 };
 

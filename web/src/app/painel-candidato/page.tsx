@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireCandidato } from "@/lib/auth";
 import { PerfilForm } from "@/components/PerfilForm";
 import { JobCard } from "@/components/JobCard";
+import { ExcluirContaButton } from "@/components/ExcluirContaButton";
 import type { VagaComEmpresa } from "@/data/types";
 
 export const metadata: Metadata = { title: "Minha conta" };
@@ -35,7 +36,7 @@ export default async function PainelCandidatoPage() {
       .select("vaga:vagas(id,titulo,cidade,empresa:empresas(nome))")
       .eq("candidato_id", user.id)
       .order("criado_em", { ascending: false }),
-    supabase.from("candidatos").select("area,cidade,resumo,skills").eq("id", user.id).maybeSingle(),
+    supabase.from("candidatos").select("area,cidade,resumo,skills,curriculo_url").eq("id", user.id).maybeSingle(),
   ]);
   const candidaturas = (candData as unknown as Candidatura[]) || [];
   const salvas = ((savData as unknown as { vaga: Candidatura["vaga"] }[]) || []).map((s) => s.vaga).filter(Boolean);
@@ -45,6 +46,7 @@ export default async function PainelCandidatoPage() {
     cidade: cand?.cidade || "",
     resumo: cand?.resumo || "",
     skills: (cand?.skills as string[] | null) || [],
+    curriculoUrl: (cand?.curriculo_url as string | null) || null,
   };
 
   // Match semântico: vagas recomendadas pelo embedding do perfil.
@@ -116,6 +118,13 @@ export default async function PainelCandidatoPage() {
           ))}
         </ul>
       )}
+
+      <h2 style={{ fontSize: 18, margin: "40px 0 8px" }}>Privacidade</h2>
+      <p style={{ color: "var(--ink-60)", fontSize: 13.5, marginBottom: 12 }}>
+        Você pode excluir sua conta e todos os seus dados a qualquer momento (LGPD). Veja como tratamos seus dados na{" "}
+        <Link href="/privacidade" style={{ color: "var(--accent)", fontWeight: 600 }}>Política de Privacidade</Link>.
+      </p>
+      <ExcluirContaButton />
     </div>
   );
 }

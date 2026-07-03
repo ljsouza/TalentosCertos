@@ -13,6 +13,7 @@ export async function salvarPerfil(_prev: Estado, formData: FormData): Promise<E
   const area = String(formData.get("area") || "") || null;
   const resumo = String(formData.get("resumo") || "") || null;
   const skills = linhas(String(formData.get("skills") || ""));
+  const curriculoUrl = String(formData.get("curriculo_url") || "") || null;
 
   if (nome) {
     await supabase.from("perfis").update({ nome }).eq("id", user.id);
@@ -26,6 +27,7 @@ export async function salvarPerfil(_prev: Estado, formData: FormData): Promise<E
     cidade: String(formData.get("cidade") || "") || null,
     resumo,
     skills,
+    ...(curriculoUrl ? { curriculo_url: curriculoUrl } : {}),
     ...(emb ? { embedding: emb } : {}),
   }).eq("id", user.id);
 

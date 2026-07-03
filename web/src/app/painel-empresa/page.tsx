@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { NovaVagaForm } from "@/components/NovaVagaForm";
 import { PerfilEmpresaForm } from "@/components/PerfilEmpresaForm";
+import { ExcluirContaButton } from "@/components/ExcluirContaButton";
 import { requireEmpresa } from "@/lib/auth";
 import { encerrarVaga } from "@/app/painel-empresa/actions";
 import type { Vaga, EmpresaPerfil } from "@/data/types";
@@ -30,6 +31,21 @@ export default async function PainelEmpresaPage() {
         {empresa?.verificada && <span className="verif"><Icon name="shield" size={13} /> Verificada</span>}
         {empresa && <Link href={`/empresa-perfil/${empresa.id}`} className="btn btn-ghost btn-sm"><Icon name="eye" size={15} /> Ver perfil público</Link>}
       </div>
+
+      {empresa && empresa.status !== "ativa" && (
+        <div role="status" style={{ border: "1px solid var(--line)", background: "var(--wash, #fff8ec)", borderRadius: 12, padding: "12px 16px", margin: "0 0 20px", fontSize: 14 }}>
+          {empresa.status === "pendente" ? (
+            <>⏳ <strong>Conta em análise.</strong> A publicação de vagas libera assim que a equipe do MaringáPost aprovar seu cadastro.</>
+          ) : (
+            <>🚫 <strong>Conta bloqueada.</strong> Entre em contato com o MaringáPost para regularizar e voltar a publicar.</>
+          )}
+        </div>
+      )}
+      {empresa && empresa.status === "ativa" && !empresa.pacote_id && (
+        <div role="status" style={{ border: "1px solid var(--line)", background: "var(--wash, #fff8ec)", borderRadius: 12, padding: "12px 16px", margin: "0 0 20px", fontSize: 14 }}>
+          💼 <strong>Nenhum plano ativo.</strong> Fale com o MaringáPost para ativar um pacote e começar a publicar vagas.
+        </div>
+      )}
 
       <div className="painel-grid" style={{ display: "grid", gridTemplateColumns: "1.1fr .9fr", gap: 32, alignItems: "start" }}>
         <section>
@@ -72,6 +88,15 @@ export default async function PainelEmpresaPage() {
           <PerfilEmpresaForm empresa={empresa as EmpresaPerfil} />
         </section>
       )}
+
+      <section style={{ marginTop: 40, maxWidth: 640 }}>
+        <h2 style={{ fontSize: 18, marginBottom: 4 }}>Privacidade</h2>
+        <p style={{ color: "var(--ink-60)", fontSize: 13.5, marginBottom: 12 }}>
+          Você pode excluir a conta e todos os dados da empresa (vagas, candidaturas, publicações) a qualquer momento (LGPD). Veja a{" "}
+          <Link href="/privacidade" style={{ color: "var(--accent)", fontWeight: 600 }}>Política de Privacidade</Link>.
+        </p>
+        <ExcluirContaButton />
+      </section>
     </div>
   );
 }

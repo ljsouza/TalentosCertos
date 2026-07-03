@@ -2,6 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { currentOrgId } from "@/lib/tenant";
 
 type Estado = { erro?: string } | undefined;
 
@@ -21,10 +22,13 @@ export async function signUp(_prev: Estado, formData: FormData): Promise<Estado>
   const nome = String(formData.get("nome") || "");
   const papel = String(formData.get("papel") || "candidato");
   const supabase = await createClient();
+  // Vincula a nova conta ao tenant corrente (resolvido do subdomínio/host).
+  // O trigger handle_new_user usa este org_id; sem ele, cai no MaringáPost.
+  const orgId = await currentOrgId();
   const { error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { nome, papel } },
+    options: { data: { nome, papel, ...(orgId ? { org_id: orgId } : {}) } },
   });
   if (error) return { erro: traduz(error.message) };
   revalidatePath("/", "layout");
@@ -33,6 +37,19 @@ export async function signUp(_prev: Estado, formData: FormData): Promise<Estado>
 
 export async function signOut() {
   const supabase = await createClient();
+  await supabase.auth.signOut();
+  revalidatePath("/", "layout");
+  redirect("/");
+}
+
+// LGPD — direito ao esquecimento: apaga todos os dados do usuário (via função
+// SQL excluir_minha_conta, escopada a auth.uid()) e encerra a sessão.
+export async function excluirConta(): Promise<void> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/entrar");
+  const { error } = await supabase.rpc("excluir_minha_conta");
+  if (error) throw new Error(error.message);
   await supabase.auth.signOut();
   revalidatePath("/", "layout");
   redirect("/");

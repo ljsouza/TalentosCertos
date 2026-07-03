@@ -33,3 +33,27 @@ export async function definirVerificacaoEmpresa(formData: FormData): Promise<voi
   revalidatePath(`/empresa-perfil/${id}`);
   revalidatePath("/");
 }
+
+// Ciclo de vida da conta da empresa: aprovar (pendente→ativa), bloquear ou
+// reativar. A RLS "admin edita empresas do tenant" garante o escopo por tenant.
+const STATUS_EMPRESA = ["pendente", "ativa", "bloqueada"] as const;
+
+export async function definirStatusEmpresa(formData: FormData): Promise<void> {
+  const { supabase } = await requireAdmin();
+  const id = String(formData.get("id") || "");
+  const status = String(formData.get("status") || "");
+  if (!(STATUS_EMPRESA as readonly string[]).includes(status)) return;
+  await supabase.from("empresas").update({ status }).eq("id", id);
+  revalidatePath("/admin");
+  revalidatePath(`/empresa-perfil/${id}`);
+  revalidatePath("/");
+}
+
+// Cobrança manual: o admin vincula/troca o pacote da empresa (ou remove).
+export async function definirPacoteEmpresa(formData: FormData): Promise<void> {
+  const { supabase } = await requireAdmin();
+  const id = String(formData.get("id") || "");
+  const pacoteId = String(formData.get("pacote_id") || "") || null;
+  await supabase.from("empresas").update({ pacote_id: pacoteId }).eq("id", id);
+  revalidatePath("/admin");
+}

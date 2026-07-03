@@ -3,6 +3,7 @@ import { Newsreader, Archivo, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { Analytics } from "@/components/Analytics";
 import { createClient } from "@/lib/supabase/server";
 
 // Fontes do protótipo (display serifada + sans + mono), self-hosted via next/font.
@@ -27,9 +28,12 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     perfil = data;
   }
 
+  const gaId = process.env.NEXT_PUBLIC_GA_ID;
+
   return (
     <html lang="pt-BR" className={`${newsreader.variable} ${archivo.variable} ${jetbrains.variable}`}>
       <body>
+        {gaId && <Analytics gaId={gaId} />}
         <div className="app">
           <SiteHeader user={perfil} />
           <main className="main">{children}</main>

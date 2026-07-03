@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { gerarVaga } from "@/lib/ia";
+import { rateLimit } from "@/lib/rate-limit";
 
 // POST /empregos/api/ia/criar-vaga  { brief: string }
 // Protegido: só empresa logada. A key do Gemini fica no servidor.
@@ -10,6 +11,11 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
   const { data: perfil } = await supabase.from("perfis").select("papel").eq("id", user.id).maybeSingle();
   if (perfil?.papel !== "empresa") return NextResponse.json({ erro: "Apenas empresas." }, { status: 403 });
+
+  // Freio contra abuso: até 10 gerações/min por usuário.
+  if (!rateLimit(`ia:vaga:${user.id}`, 10, 60_000)) {
+    return NextResponse.json({ erro: "Muitas solicitações. Tente novamente em instantes." }, { status: 429 });
+  }
 
   let brief = "";
   try {

@@ -1,4 +1,5 @@
 import { supabase, supabaseEnabled } from "@/lib/supabase";
+import { currentOrgId } from "@/lib/tenant";
 import type { PublicacaoComEmpresa } from "@/data/types";
 
 const SELECT = "*, empresa:empresas(id,nome)";
@@ -15,18 +16,20 @@ const MOCK: PublicacaoComEmpresa[] = [
 
 export async function getPublicacoes(): Promise<PublicacaoComEmpresa[]> {
   if (!supabaseEnabled || !supabase) return MOCK;
-  const { data, error } = await supabase
-    .from("publicacoes")
-    .select(SELECT)
-    .eq("status", "aprovada")
-    .order("publicado_em", { ascending: false });
+  const orgId = await currentOrgId();
+  let query = supabase.from("publicacoes").select(SELECT).eq("status", "aprovada");
+  if (orgId) query = query.eq("org_id", orgId);
+  const { data, error } = await query.order("publicado_em", { ascending: false });
   if (error) throw error;
   return data as unknown as PublicacaoComEmpresa[];
 }
 
 export async function pubById(id: string): Promise<PublicacaoComEmpresa | null> {
   if (!supabaseEnabled || !supabase) return MOCK.find((p) => p.id === id) ?? null;
-  const { data, error } = await supabase.from("publicacoes").select(SELECT).eq("id", id).maybeSingle();
+  const orgId = await currentOrgId();
+  let query = supabase.from("publicacoes").select(SELECT).eq("id", id);
+  if (orgId) query = query.eq("org_id", orgId);
+  const { data, error } = await query.maybeSingle();
   if (error) throw error;
   return (data as unknown as PublicacaoComEmpresa) ?? null;
 }
