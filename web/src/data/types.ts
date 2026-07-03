@@ -11,6 +11,10 @@ export interface Empresa {
   responde: boolean;
   tempo_resposta: string | null;
   logo_url: string | null;
+  // Ciclo de vida da conta + cobrança manual (só carregados no painel admin;
+  // opcionais porque os joins leves dos cards públicos não os buscam).
+  status?: "pendente" | "ativa" | "bloqueada";
+  pacote_id?: string | null;
 }
 
 export interface Vaga {

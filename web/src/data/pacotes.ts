@@ -1,4 +1,5 @@
 import { supabase, supabaseEnabled } from "@/lib/supabase";
+import { currentOrgId } from "@/lib/tenant";
 import type { Pacote } from "@/data/types";
 
 const MOCK: Pacote[] = [
@@ -9,7 +10,10 @@ const MOCK: Pacote[] = [
 
 export async function getPacotes(): Promise<Pacote[]> {
   if (!supabaseEnabled || !supabase) return MOCK;
-  const { data, error } = await supabase.from("pacotes").select("*").order("preco", { ascending: true, nullsFirst: false });
+  const orgId = await currentOrgId();
+  let query = supabase.from("pacotes").select("*");
+  if (orgId) query = query.eq("org_id", orgId);
+  const { data, error } = await query.order("preco", { ascending: true, nullsFirst: false });
   if (error) throw error;
   return data as Pacote[];
 }
