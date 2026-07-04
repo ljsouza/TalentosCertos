@@ -2,7 +2,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { currentOrgId } from "@/lib/tenant";
+import { currentOrgId, getBrand } from "@/lib/tenant";
+import { emailMarca } from "@/lib/notify";
 
 type Estado = { erro?: string } | undefined;
 
@@ -48,8 +49,23 @@ export async function excluirConta(): Promise<void> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/entrar");
+  const emailUsuario = user.email;
   const { error } = await supabase.rpc("excluir_minha_conta");
   if (error) throw new Error(error.message);
+
+  // Confirmação de exclusão (item 1.16). Enviada antes do redirect.
+  if (emailUsuario) {
+    const brand = await getBrand();
+    await emailMarca(
+      emailUsuario,
+      `Conta excluída — ${brand.nome}`,
+      "Sua conta foi excluída",
+      `<p>Confirmamos a exclusão da sua conta e a remoção dos seus dados pessoais, conforme a LGPD.</p>
+       <p>Se não foi você, entre em contato conosco.</p>`,
+      brand
+    );
+  }
+
   await supabase.auth.signOut();
   revalidatePath("/", "layout");
   redirect("/");

@@ -3,6 +3,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireEmpresa } from "@/lib/auth";
 import { gerarEmbedding, textoVaga } from "@/lib/embeddings";
+import { getBrand } from "@/lib/tenant";
+import { contatoDe, emailMarca } from "@/lib/notify";
+import { enviarWhatsApp } from "@/lib/whatsapp";
 
 type Estado = { erro?: string; ok?: boolean } | undefined;
 
@@ -138,12 +141,48 @@ export async function encerrarVaga(formData: FormData): Promise<void> {
 // A RLS "empresa atualiza candidatura" (0004) garante o escopo.
 const STATUS_CAND = ["enviada", "triagem", "selecionada", "recusada"] as const;
 
+const STATUS_LABEL: Record<string, string> = {
+  enviada: "Enviada", triagem: "Em análise", selecionada: "Selecionado(a)", recusada: "Não selecionado(a)",
+};
+
 export async function atualizarStatusCandidatura(formData: FormData): Promise<void> {
-  const { supabase } = await requireEmpresa();
+  const { empresa, supabase } = await requireEmpresa();
   const id = String(formData.get("candidatura_id") || "");
   const status = String(formData.get("status") || "");
   const vagaId = String(formData.get("vaga_id") || "");
   if (!(STATUS_CAND as readonly string[]).includes(status)) return;
+
+  const { data: cand } = await supabase
+    .from("candidaturas")
+    .select("candidato_id, vaga:vagas(titulo)")
+    .eq("id", id)
+    .maybeSingle();
   await supabase.from("candidaturas").update({ status }).eq("id", id);
   revalidatePath(`/painel-empresa/vaga/${vagaId}`);
+
+  // Notifica o candidato (item 1.08) e, ao recusar, envia WhatsApp humanizado (1.09).
+  const candidatoId = (cand as { candidato_id?: string } | null)?.candidato_id;
+  const vagaTitulo = (cand as { vaga?: { titulo?: string } | null } | null)?.vaga?.titulo || "a vaga";
+  const empresaNome = empresa?.nome || "a empresa";
+  if (candidatoId) {
+    const { email, nome, telefone } = await contatoDe(candidatoId);
+    const brand = await getBrand();
+    const primeiro = (nome || "").split(" ")[0] || "";
+    if (email) {
+      await emailMarca(
+        email,
+        `Atualização da sua candidatura — ${vagaTitulo}`,
+        "Sua candidatura foi atualizada",
+        `<p>Olá${primeiro ? `, ${primeiro}` : ""}. O status da sua candidatura para <strong>${vagaTitulo}</strong> (${empresaNome}) mudou para <strong>${STATUS_LABEL[status]}</strong>.</p>
+         <p>Acompanhe no seu painel.</p>`,
+        brand
+      );
+    }
+    if (status === "recusada" && telefone) {
+      await enviarWhatsApp({
+        to: telefone,
+        texto: `Olá${primeiro ? ` ${primeiro}` : ""}! Agradecemos muito seu interesse na vaga "${vagaTitulo}" (${empresaNome}). Desta vez seguimos com outros perfis, mas seu currículo fica no nosso radar para próximas oportunidades. Continue de olho no portal — sucesso! 💚`,
+      });
+    }
+  }
 }
