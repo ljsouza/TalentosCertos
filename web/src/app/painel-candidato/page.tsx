@@ -4,6 +4,7 @@ import { requireCandidato } from "@/lib/auth";
 import { PerfilForm } from "@/components/PerfilForm";
 import { JobCard } from "@/components/JobCard";
 import { ExcluirContaButton } from "@/components/ExcluirContaButton";
+import { getTaxonomias } from "@/lib/tenant";
 import type { VagaComEmpresa } from "@/data/types";
 
 export const metadata: Metadata = { title: "Minha conta" };
@@ -24,6 +25,7 @@ type Candidatura = {
 
 export default async function PainelCandidatoPage() {
   const { perfil, user, supabase } = await requireCandidato();
+  const { areas, cidades } = await getTaxonomias();
 
   const [{ data: candData }, { data: savData }, { data: cand }] = await Promise.all([
     supabase
@@ -84,7 +86,7 @@ export default async function PainelCandidatoPage() {
 
       <h2 style={{ fontSize: 18, marginBottom: 12 }}>Meu perfil</h2>
       <p style={{ color: "var(--ink-60)", fontSize: 14, marginBottom: 14 }}>Cole seu currículo ou envie um PDF — a IA preenche para você. Edite e salve.</p>
-      <PerfilForm inicial={perfilInicial} />
+      <PerfilForm inicial={perfilInicial} areas={areas} cidades={cidades} />
 
       <h2 style={{ fontSize: 18, margin: "32px 0 12px" }}>Minhas candidaturas ({candidaturas.length})</h2>
       {candidaturas.length === 0 ? (

@@ -1,5 +1,6 @@
 import { getVagas } from "@/data/vagas";
 import { createClient } from "@/lib/supabase/server";
+import { getTaxonomias, getBrand } from "@/lib/tenant";
 import { HomeClient } from "@/app/HomeClient";
 
 // Server Component: as vagas (com empresa) são buscadas NO SERVIDOR e o HTML
@@ -8,6 +9,7 @@ import { HomeClient } from "@/app/HomeClient";
 // quando há candidato logado.
 export default async function Home() {
   const vagas = await getVagas();
+  const [{ areas, cidades }, brand] = await Promise.all([getTaxonomias(), getBrand()]);
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -22,5 +24,16 @@ export default async function Home() {
     }
   }
 
-  return <HomeClient vagas={vagas} savedIds={savedIds} isCandidato={isCandidato} />;
+  return (
+    <HomeClient
+      vagas={vagas}
+      savedIds={savedIds}
+      isCandidato={isCandidato}
+      areas={areas}
+      cidades={cidades}
+      regiao={brand.regiao}
+      heroTitle={brand.heroTitle}
+      heroSub={brand.heroSub}
+    />
+  );
 }

@@ -7,7 +7,25 @@ import { Btn, SectionHead } from "@/components/ui";
 import { AREAS, CIDADES } from "@/lib/refs";
 import type { VagaComEmpresa } from "@/data/types";
 
-export function HomeClient({ vagas, savedIds, isCandidato }: { vagas: VagaComEmpresa[]; savedIds: string[]; isCandidato: boolean }) {
+type HomeClientProps = {
+  vagas: VagaComEmpresa[];
+  savedIds: string[];
+  isCandidato: boolean;
+  // Taxonomias/branding do tenant (com fallback para os defaults do produto).
+  areas?: string[];
+  cidades?: string[];
+  regiao?: string;
+  heroTitle?: string;
+  heroSub?: string;
+};
+
+export function HomeClient({
+  vagas, savedIds, isCandidato,
+  areas = AREAS, cidades = CIDADES,
+  regiao = "Maringá e região",
+  heroTitle = "O trabalho certo tem endereço aqui.",
+  heroSub = "Vagas verificadas, empresas que respondem e o jornalismo do MaringáPost sobre carreira — em um só lugar.",
+}: HomeClientProps) {
   const router = useRouter();
   const saved = new Set(savedIds);
   const [q, setQ] = useState("");
@@ -36,9 +54,9 @@ export function HomeClient({ vagas, savedIds, isCandidato }: { vagas: VagaComEmp
     <div className="screen">
       <section className="hero">
         <div className="hero-inner">
-          <span className="chapeu">Portal de Empregos · Maringá e região</span>
-          <h1 className="hero-title">O trabalho certo tem endereço aqui.</h1>
-          <p className="hero-sub">Vagas verificadas, empresas que respondem e o jornalismo do MaringáPost sobre carreira — em um só lugar.</p>
+          <span className="chapeu">Portal de Empregos · {regiao}</span>
+          <h1 className="hero-title">{heroTitle}</h1>
+          <p className="hero-sub">{heroSub}</p>
           <div className="searchbar">
             <div className="sb-field grow">
               <Icon name="search" size={20} />
@@ -48,7 +66,7 @@ export function HomeClient({ vagas, savedIds, isCandidato }: { vagas: VagaComEmp
               <Icon name="pin" size={18} />
               <select value={cidade} onChange={(e) => setCidade(e.target.value)}>
                 <option value="">Toda a região</option>
-                {CIDADES.map((c) => <option key={c} value={c}>{c}</option>)}
+                {cidades.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             <Btn icon="search">Buscar</Btn>
@@ -63,7 +81,7 @@ export function HomeClient({ vagas, savedIds, isCandidato }: { vagas: VagaComEmp
 
       <div className="area-rail">
         <button className={`pill ${!area ? "on" : ""}`} onClick={() => setArea("")}>Todas as áreas</button>
-        {AREAS.slice(0, 8).map((a) => (
+        {areas.slice(0, 8).map((a) => (
           <button key={a} className={`pill ${area === a ? "on" : ""}`} onClick={() => setArea(a === area ? "" : a)}>{a}</button>
         ))}
       </div>
@@ -93,7 +111,7 @@ export function HomeClient({ vagas, savedIds, isCandidato }: { vagas: VagaComEmp
               {[{ x: 30, y: 35, n: 14 }, { x: 62, y: 28, n: 9 }, { x: 48, y: 58, n: 22 }, { x: 75, y: 62, n: 6 }, { x: 22, y: 70, n: 11 }].map((p, i) => (
                 <span key={i} className="map-pin" style={{ left: `${p.x}%`, top: `${p.y}%` }}>{p.n}</span>
               ))}
-              <span className="minimap-cap"><Icon name="map" size={15} /> 9 regiões de Maringá</span>
+              <span className="minimap-cap"><Icon name="map" size={15} /> {regiao}</span>
             </div>
           </div>
           <div className="aside-card cta-card">

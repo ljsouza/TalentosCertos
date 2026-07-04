@@ -18,10 +18,16 @@ export const TIPOS: Record<string, { label: string }> = {
   clt: { label: "CLT" },
 };
 
+// Lista padronizada de áreas (RF-02 exige >= 20). É o default global do produto;
+// um tenant pode sobrescrever via organizacoes.branding.areas.
 export const AREAS = [
   "Administrativo", "Comercial / Vendas", "Tecnologia / TI", "Saúde",
   "Indústria / Produção", "Logística", "Educação", "Marketing",
   "Construção Civil", "Gastronomia", "Recursos Humanos", "Financeiro",
+  "Atendimento ao Cliente", "Jurídico", "Engenharia", "Agronegócio",
+  "Segurança do Trabalho", "Beleza e Estética", "Transporte e Mobilidade",
+  "Limpeza e Conservação", "Turismo e Hotelaria", "Telecomunicações",
+  "Meio Ambiente", "Serviços Gerais",
 ];
 
 export const CIDADES = [

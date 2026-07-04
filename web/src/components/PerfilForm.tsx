@@ -7,7 +7,7 @@ import { AREAS, CIDADES } from "@/lib/refs";
 
 type Inicial = { nome: string; area: string; cidade: string; resumo: string; skills: string[]; curriculoUrl?: string | null };
 
-export function PerfilForm({ inicial }: { inicial: Inicial }) {
+export function PerfilForm({ inicial, areas = AREAS, cidades = CIDADES }: { inicial: Inicial; areas?: string[]; cidades?: string[] }) {
   const [state, formAction, pending] = useActionState(salvarPerfil, undefined);
   const [form, setForm] = useState({
     nome: inicial.nome, area: inicial.area, cidade: inicial.cidade,
@@ -94,10 +94,10 @@ export function PerfilForm({ inicial }: { inicial: Inicial }) {
       <label>Nome<input name="nome" value={form.nome} onChange={set("nome")} required /></label>
       <div className="vf-row">
         <label>Área
-          <select name="area" value={form.area} onChange={set("area")}><option value="">Selecione</option>{AREAS.map((a) => <option key={a} value={a}>{a}</option>)}</select>
+          <select name="area" value={form.area} onChange={set("area")}><option value="">Selecione</option>{areas.map((a) => <option key={a} value={a}>{a}</option>)}</select>
         </label>
         <label>Cidade
-          <select name="cidade" value={form.cidade} onChange={set("cidade")}><option value="">Selecione</option>{CIDADES.map((c) => <option key={c} value={c}>{c}</option>)}</select>
+          <select name="cidade" value={form.cidade} onChange={set("cidade")}><option value="">Selecione</option>{cidades.map((c) => <option key={c} value={c}>{c}</option>)}</select>
         </label>
       </div>
       <label>Resumo profissional<textarea name="resumo" value={form.resumo} onChange={set("resumo")} rows={4} placeholder="2-3 frases sobre você." /></label>

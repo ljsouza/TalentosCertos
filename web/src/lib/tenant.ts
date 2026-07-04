@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { headers } from "next/headers";
 import { supabase, supabaseEnabled } from "@/lib/supabase";
+import { AREAS, CIDADES } from "@/lib/refs";
 
 // ── Resolução de tenant (multi-tenant) ──────────────────────────────────────
 // O proxy (src/proxy.ts) resolve o slug do tenant a partir do host e o propaga
@@ -74,4 +75,29 @@ export const getTenant = cache(async (): Promise<Organizacao | null> => {
 export async function currentOrgId(): Promise<string | null> {
   const t = await getTenant();
   return t?.id ?? null;
+}
+
+// Taxonomias do tenant (áreas/cidades), com fallback para os defaults globais.
+export async function getTaxonomias(): Promise<{ areas: string[]; cidades: string[] }> {
+  const t = await getTenant();
+  const b = (t?.branding ?? {}) as { areas?: unknown; cidades?: unknown };
+  const areas = Array.isArray(b.areas) && b.areas.length ? (b.areas as string[]) : AREAS;
+  const cidades = Array.isArray(b.cidades) && b.cidades.length ? (b.cidades as string[]) : CIDADES;
+  return { areas, cidades };
+}
+
+// Identidade/copy do tenant para o hero da home (com defaults do MaringáPost).
+export type Brand = { nome: string; regiao: string; heroTitle: string; heroSub: string; accent: string | null };
+export async function getBrand(): Promise<Brand> {
+  const t = await getTenant();
+  const b = (t?.branding ?? {}) as Record<string, string>;
+  return {
+    nome: t?.nome ?? "MaringáPost Empregos",
+    regiao: b.regiao ?? "Maringá e região",
+    heroTitle: b.hero_title ?? "O trabalho certo tem endereço aqui.",
+    heroSub:
+      b.hero_sub ??
+      "Vagas verificadas, empresas que respondem e o jornalismo do MaringáPost sobre carreira — em um só lugar.",
+    accent: b.accent ?? null,
+  };
 }

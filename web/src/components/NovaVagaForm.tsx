@@ -4,13 +4,15 @@ import { Icon } from "@/components/Icon";
 import { createVaga } from "@/app/painel-empresa/actions";
 import { AREAS, CIDADES, MODALIDADES, TIPOS } from "@/lib/refs";
 
+type NovaVagaFormProps = { areas?: string[]; cidades?: string[] };
+
 const VAZIO = {
   titulo: "", area: "", cidade: "", modalidade: "", experiencia: "",
   salario_min: "", salario_max: "", descricao: "", requisitos: "", beneficios: "",
   prazo: "", filtro_pergunta: "",
 };
 
-export function NovaVagaForm() {
+export function NovaVagaForm({ areas = AREAS, cidades = CIDADES }: NovaVagaFormProps) {
   const [state, formAction, pending] = useActionState(createVaga, undefined);
   const [form, setForm] = useState(VAZIO);
   const [brief, setBrief] = useState("");
@@ -73,10 +75,10 @@ export function NovaVagaForm() {
 
       <div className="vf-row">
         <label>Área
-          <select name="area" value={form.area} onChange={set("area")}><option value="">Selecione</option>{AREAS.map((a) => <option key={a} value={a}>{a}</option>)}</select>
+          <select name="area" value={form.area} onChange={set("area")}><option value="">Selecione</option>{areas.map((a) => <option key={a} value={a}>{a}</option>)}</select>
         </label>
         <label>Cidade
-          <select name="cidade" value={form.cidade} onChange={set("cidade")}><option value="">Selecione</option>{CIDADES.map((c) => <option key={c} value={c}>{c}</option>)}</select>
+          <select name="cidade" value={form.cidade} onChange={set("cidade")}><option value="">Selecione</option>{cidades.map((c) => <option key={c} value={c}>{c}</option>)}</select>
         </label>
       </div>
 

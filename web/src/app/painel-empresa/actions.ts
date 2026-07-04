@@ -133,3 +133,17 @@ export async function encerrarVaga(formData: FormData): Promise<void> {
   revalidatePath("/painel-empresa");
   revalidatePath("/");
 }
+
+// Empresa muda o status de uma candidatura das suas vagas.
+// A RLS "empresa atualiza candidatura" (0004) garante o escopo.
+const STATUS_CAND = ["enviada", "triagem", "selecionada", "recusada"] as const;
+
+export async function atualizarStatusCandidatura(formData: FormData): Promise<void> {
+  const { supabase } = await requireEmpresa();
+  const id = String(formData.get("candidatura_id") || "");
+  const status = String(formData.get("status") || "");
+  const vagaId = String(formData.get("vaga_id") || "");
+  if (!(STATUS_CAND as readonly string[]).includes(status)) return;
+  await supabase.from("candidaturas").update({ status }).eq("id", id);
+  revalidatePath(`/painel-empresa/vaga/${vagaId}`);
+}
