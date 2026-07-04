@@ -1,17 +1,19 @@
 import Link from "next/link";
 
-// Footer é só navegação — Server Component com Link (sem estado).
-export function SiteFooter() {
+type Marca = { nome: string; regiao: string; logoWord: string; logoTag: string; footerSobre: string };
+
+// Footer é só navegação — Server Component com Link (sem estado). A identidade
+// (logo/nome/descrição/região) vem do tenant corrente.
+export function SiteFooter({ brand }: { brand: Marca }) {
   return (
     <footer className="footer">
       <div className="footer-inner">
         <div className="footer-brand">
-          <Link href="/" className="logo" aria-label="MaringáPost Empregos — início">
-            <span className="logo-word" style={{ fontSize: 18 }}>MARINGÁ POST</span>
-            <span className="logo-vert">EMPREGOS</span>
+          <Link href="/" className="logo" aria-label={`${brand.logoWord} ${brand.logoTag} — início`}>
+            <span className="logo-word" style={{ fontSize: 18 }}>{brand.logoWord}</span>
+            <span className="logo-vert">{brand.logoTag}</span>
           </Link>
-          <p>O portal de empregos do MaringáPost. Conectando talentos e empresas no Norte do Paraná com a credibilidade de quem informa a cidade há anos.</p>
-          <span className="footer-tag">Independente, sempre.</span>
+          <p>{brand.footerSobre}</p>
         </div>
         <div className="footer-cols">
           <div>
@@ -27,14 +29,14 @@ export function SiteFooter() {
             <Link href="/painel-empresa">Painel</Link>
           </div>
           <div>
-            <h4>MaringáPost</h4>
+            <h4>{brand.logoWord}</h4>
             <Link href="/conteudo">Carreira &amp; RH</Link>
             <Link href="/privacidade">Privacidade</Link>
             <Link href="/admin">Moderação (admin)</Link>
           </div>
         </div>
       </div>
-      <div className="footer-base">© 2026 MaringáPost Empregos · Maringá, PR · Protótipo</div>
+      <div className="footer-base">© 2026 {brand.nome} · {brand.regiao}</div>
     </footer>
   );
 }

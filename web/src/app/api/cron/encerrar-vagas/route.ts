@@ -54,6 +54,9 @@ export async function POST(request: Request) {
       heroTitle: "",
       heroSub: "",
       accent: v.org?.branding?.accent ?? null,
+      logoWord: v.org?.nome ?? "Empregos",
+      logoTag: "",
+      footerSobre: "",
     };
     await emailMarca(
       email,

@@ -52,10 +52,14 @@ export function tenantSlugFromHost(host: string | null | undefined): string {
   return DEFAULT_TENANT;
 }
 
-// Slug do tenant corrente, lido do header propagado pelo proxy. "" = institucional.
+// Slug do tenant corrente. Deriva direto do header `host` (sempre presente em
+// Server Components), em vez do header injetado pelo proxy — que, no `next start`
+// (prod), não é lido de forma confiável por Server Components, só por Route
+// Handlers. Cobre os dois modos: TENANT_SLUG fixo (deploy do parceiro/prefeitura)
+// e subdomínio do SaaS. "" = institucional.
 export async function getTenantSlug(): Promise<string> {
   const h = await headers();
-  return h.get(TENANT_HEADER) ?? "";
+  return tenantSlugFromHost(h.get("host"));
 }
 
 // Organização corrente (cacheada por request). null = institucional ou mock.
@@ -86,18 +90,34 @@ export async function getTaxonomias(): Promise<{ areas: string[]; cidades: strin
   return { areas, cidades };
 }
 
-// Identidade/copy do tenant para o hero da home (com defaults do MaringáPost).
-export type Brand = { nome: string; regiao: string; heroTitle: string; heroSub: string; accent: string | null };
+// Identidade/copy do tenant (header, hero, footer). Defaults do MaringáPost.
+export type Brand = {
+  nome: string;
+  regiao: string;
+  heroTitle: string;
+  heroSub: string;
+  accent: string | null;
+  logoWord: string;   // palavra principal do logo (ex.: "MaringáPost", "Araucária")
+  logoTag: string;    // sufixo do logo (ex.: "Empregos")
+  footerSobre: string;
+};
 export async function getBrand(): Promise<Brand> {
   const t = await getTenant();
   const b = (t?.branding ?? {}) as Record<string, string>;
+  const nome = t?.nome ?? "MaringáPost Empregos";
+  const regiao = b.regiao ?? "Maringá e região";
+  // Deriva logo do nome ("Araucária Empregos" → "Araucária" + "Empregos").
+  const logoWord = b.logo_word ?? (nome.replace(/\s*empregos$/i, "").trim() || nome);
   return {
-    nome: t?.nome ?? "MaringáPost Empregos",
-    regiao: b.regiao ?? "Maringá e região",
+    nome,
+    regiao,
     heroTitle: b.hero_title ?? "O trabalho certo tem endereço aqui.",
     heroSub:
       b.hero_sub ??
-      "Vagas verificadas, empresas que respondem e o jornalismo do MaringáPost sobre carreira — em um só lugar.",
+      "Vagas verificadas, empresas que respondem e conteúdo de carreira — em um só lugar.",
     accent: b.accent ?? null,
+    logoWord,
+    logoTag: b.logo_tag ?? "Empregos",
+    footerSobre: b.footer_sobre ?? `A plataforma de empregos de ${regiao}. Conectando talentos e empresas da região.`,
   };
 }
