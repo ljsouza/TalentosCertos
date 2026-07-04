@@ -140,3 +140,71 @@ function mockCv(texto: string): PerfilExtraido {
     skills: ["Comunicação", "Trabalho em equipe", "Organização"],
   };
 }
+
+// ── Perfil de IA do candidato (RF-38) ───────────────────────────────────────
+// A partir dos dados DECLARADOS (não de um CV), gera um resumo profissional,
+// 3 pontos fortes e sugestões de melhoria do perfil.
+export type PerfilIA = { resumo: string; pontos_fortes: string[]; sugestoes: string[] };
+
+type PerfilInput = {
+  area?: string | null;
+  resumo?: string | null;
+  skills?: string[];
+  formacoes?: unknown[];
+  experiencias?: unknown[];
+};
+
+const SCHEMA_PERFIL = {
+  type: "object",
+  properties: {
+    resumo: { type: "string" },
+    pontos_fortes: { type: "array", items: { type: "string" } },
+    sugestoes: { type: "array", items: { type: "string" } },
+  },
+  required: ["resumo", "pontos_fortes", "sugestoes"],
+};
+
+export async function gerarPerfilIA(input: PerfilInput): Promise<PerfilIA> {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) return mockPerfil(input);
+
+  const contexto = JSON.stringify({
+    area: input.area ?? "",
+    resumo: input.resumo ?? "",
+    skills: input.skills ?? [],
+    formacoes: input.formacoes ?? [],
+    experiencias: input.experiencias ?? [],
+  });
+  const prompt =
+    "Com base nos dados declarados do candidato (JSON abaixo), gere, em português do Brasil: " +
+    "resumo: um resumo profissional de 2 a 3 parágrafos em 1ª pessoa; " +
+    "pontos_fortes: exatamente 3 pontos fortes objetivos; " +
+    "sugestoes: 2 a 4 sugestões de melhoria do perfil (campos incompletos, habilidades comuns na área que faltam). " +
+    "Não invente experiências que não estejam nos dados.\n\nDados: " + contexto;
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${key}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { responseMimeType: "application/json", responseSchema: SCHEMA_PERFIL, temperature: 0.5 },
+      }),
+    }
+  );
+  if (!res.ok) throw new Error(`Gemini ${res.status}: ${await res.text()}`);
+  const data = await res.json();
+  const txt = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!txt) throw new Error("Gemini: resposta vazia");
+  return JSON.parse(txt) as PerfilIA;
+}
+
+function mockPerfil(input: PerfilInput): PerfilIA {
+  const area = input.area || "sua área";
+  return {
+    resumo: `(rascunho sem IA) Profissional de ${area}. Configure GEMINI_API_KEY para gerar o resumo com o Gemini a partir das suas experiências e formação.`,
+    pontos_fortes: (input.skills ?? []).slice(0, 3).length ? (input.skills ?? []).slice(0, 3) : ["Comunicação", "Organização", "Proatividade"],
+    sugestoes: ["Adicione suas experiências profissionais", "Inclua sua formação acadêmica", "Liste mais competências técnicas"],
+  };
+}

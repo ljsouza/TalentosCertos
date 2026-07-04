@@ -2,6 +2,7 @@
 import { useActionState, useState } from "react";
 import { atualizarPerfilEmpresa } from "@/app/painel-empresa/actions";
 import { uploadLogo } from "@/lib/storage-upload";
+import { maskCNPJ } from "@/lib/validacao";
 import type { EmpresaPerfil } from "@/data/types";
 
 type Props = { empresa: EmpresaPerfil };
@@ -9,6 +10,7 @@ type Props = { empresa: EmpresaPerfil };
 export function PerfilEmpresaForm({ empresa: e }: Props) {
   const [state, formAction, pending] = useActionState(atualizarPerfilEmpresa, undefined);
   const [logoUrl, setLogoUrl] = useState<string>(e.logo_url ?? "");
+  const [cnpj, setCnpj] = useState<string>(e.cnpj ? maskCNPJ(e.cnpj) : "");
   const [logoLoading, setLogoLoading] = useState(false);
   const [logoErro, setLogoErro] = useState<string | null>(null);
 
@@ -28,7 +30,12 @@ export function PerfilEmpresaForm({ empresa: e }: Props) {
 
   return (
     <form action={formAction} className="vaga-form">
-      <label>Nome da empresa<input name="nome" required defaultValue={e.nome ?? ""} placeholder="Ex.: Apitec Engenharia" /></label>
+      <label>Nome fantasia<input name="nome" required defaultValue={e.nome ?? ""} placeholder="Ex.: Apitec Engenharia" /></label>
+
+      <div className="vf-row">
+        <label>Razão social<input name="razao_social" defaultValue={e.razao_social ?? ""} placeholder="Ex.: Apitec Engenharia Ltda" /></label>
+        <label>CNPJ<input name="cnpj" value={cnpj} onChange={(ev) => setCnpj(maskCNPJ(ev.target.value))} inputMode="numeric" placeholder="00.000.000/0000-00" /></label>
+      </div>
 
       <div className="vf-row">
         <label>Setor<input name="setor" defaultValue={e.setor ?? ""} placeholder="Ex.: Indústria / Engenharia" /></label>

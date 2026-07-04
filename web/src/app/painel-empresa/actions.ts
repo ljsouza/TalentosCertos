@@ -6,6 +6,7 @@ import { gerarEmbedding, textoVaga } from "@/lib/embeddings";
 import { getBrand } from "@/lib/tenant";
 import { contatoDe, emailMarca } from "@/lib/notify";
 import { enviarWhatsApp } from "@/lib/whatsapp";
+import { validarCNPJ, soDigitos } from "@/lib/validacao";
 
 type Estado = { erro?: string; ok?: boolean } | undefined;
 
@@ -104,11 +105,18 @@ export async function atualizarPerfilEmpresa(_prev: Estado, formData: FormData):
     return { erro: "Ano de fundação inválido." };
   }
 
+  // CNPJ opcional, mas se informado precisa ser válido.
+  const cnpjRaw = String(formData.get("cnpj") || "").trim();
+  if (cnpjRaw && !validarCNPJ(cnpjRaw)) return { erro: "CNPJ inválido." };
+  const cnpj = cnpjRaw ? soDigitos(cnpjRaw) : null;
+
   // O dono edita só os campos institucionais — `verificada` é exclusiva do admin.
   const { error } = await supabase
     .from("empresas")
     .update({
       nome,
+      razao_social: String(formData.get("razao_social") || "") || null,
+      ...(cnpj ? { cnpj } : {}),
       setor: String(formData.get("setor") || "") || null,
       sobre: String(formData.get("sobre") || "") || null,
       sobre_longo: String(formData.get("sobre_longo") || "") || null,
