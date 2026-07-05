@@ -4,10 +4,9 @@ import { contatoDe, emailMarca } from "@/lib/notify";
 import type { Brand } from "@/lib/tenant";
 
 // Cron diário (item 1.10): encerra vagas vencidas E notifica a empresa por e-mail.
-// Substitui a parte de e-mail do pg_cron (0006) — agende via Vercel Cron chamando
-// este endpoint 1x/dia (recomenda-se desativar o job pg_cron para evitar que ele
-// encerre antes, deixando este sem o que notificar).
-// Protegido por CRON_SECRET (header Authorization: Bearer <segredo>).
+// Substitui a parte de e-mail do pg_cron (0006) — agendado via Vercel Cron (GET),
+// que envia Authorization: Bearer <CRON_SECRET> quando a env CRON_SECRET existe.
+// Recomenda-se desativar o job pg_cron para não encerrar antes (sem notificar).
 
 type VagaVencida = {
   id: string;
@@ -16,7 +15,7 @@ type VagaVencida = {
   org: { nome: string | null; branding: Record<string, string> | null } | null;
 };
 
-export async function POST(request: Request) {
+export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET;
   if (secret && request.headers.get("authorization") !== `Bearer ${secret}`) {
     return NextResponse.json({ erro: "Não autorizado." }, { status: 401 });
