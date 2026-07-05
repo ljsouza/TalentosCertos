@@ -7,6 +7,7 @@ import { getBrand } from "@/lib/tenant";
 import { contatoDe, emailMarca } from "@/lib/notify";
 import { enviarWhatsApp } from "@/lib/whatsapp";
 import { validarCNPJ, soDigitos } from "@/lib/validacao";
+import { notificarRadar } from "@/lib/radar";
 
 type Estado = { erro?: string; ok?: boolean } | undefined;
 
@@ -59,6 +60,8 @@ export async function createVaga(_prev: Estado, formData: FormData): Promise<Est
   const filtroPergunta = String(formData.get("filtro_pergunta") || "").trim();
 
   const area = String(formData.get("area") || "") || null;
+  const cidade = String(formData.get("cidade") || "") || null;
+  const salarioMax = salMax ? Number(salMax) : null;
   const descricao = String(formData.get("descricao") || "") || null;
   const requisitos = linhas(String(formData.get("requisitos") || ""));
 
@@ -66,11 +69,11 @@ export async function createVaga(_prev: Estado, formData: FormData): Promise<Est
     empresa_id: empresa.id,
     titulo,
     area,
-    cidade: String(formData.get("cidade") || "") || null,
+    cidade,
     modalidade: String(formData.get("modalidade") || "") || null,
     tipos: formData.getAll("tipos").map(String),
     salario_min: salMin ? Number(salMin) : null,
-    salario_max: salMax ? Number(salMax) : null,
+    salario_max: salarioMax,
     experiencia: String(formData.get("experiencia") || "") || null,
     descricao,
     requisitos,
@@ -86,6 +89,16 @@ export async function createVaga(_prev: Estado, formData: FormData): Promise<Est
   // Embedding para o match semântico (não bloqueia se falhar).
   const emb = await gerarEmbedding(textoVaga({ titulo, area, descricao, requisitos }));
   if (emb && nova) await supabase.from("vagas").update({ embedding: emb }).eq("id", nova.id);
+
+  // Radar de Vagas (item 1.14): alerta imediato por WhatsApp aos candidatos
+  // compatíveis com radar ativo. Não bloqueia a publicação se falhar.
+  if (nova) {
+    try {
+      await notificarRadar({ id: nova.id, titulo, area, cidade, org_id: empresa.org_id, salario_max: salarioMax });
+    } catch (e) {
+      console.error("[radar] falha ao notificar:", e);
+    }
+  }
 
   revalidatePath("/painel-empresa");
   revalidatePath("/"); // a vaga já aparece na home
