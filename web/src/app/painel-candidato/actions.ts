@@ -3,6 +3,8 @@ import { revalidatePath } from "next/cache";
 import { requireCandidato } from "@/lib/auth";
 import { gerarEmbedding, textoCandidato } from "@/lib/embeddings";
 import { validarCPF, soDigitos } from "@/lib/validacao";
+import { currentOrgId } from "@/lib/tenant";
+import { POLICY_VERSION } from "@/lib/consentimento";
 
 type Estado = { ok?: boolean; erro?: string } | undefined;
 
@@ -73,6 +75,19 @@ export async function salvarRadar(_prev: Estado, formData: FormData): Promise<Es
     radar_salario_min: radarSalarioMin,
   }).eq("id", user.id);
   if (error) return { erro: error.message };
+  // Registra o consentimento de WhatsApp no histórico (RNF-07).
+  await supabase.from("consentimentos").insert({ user_id: user.id, org_id: await currentOrgId(), tipo: "whatsapp", aceito: ativar, versao: POLICY_VERSION });
   revalidatePath("/painel-candidato");
   return { ok: true };
+}
+
+// Revoga um consentimento (RNF-09) — registra uma linha aceito=false no histórico.
+export async function revogarConsentimento(formData: FormData): Promise<void> {
+  const { user, supabase } = await requireCandidato();
+  const tipo = String(formData.get("tipo") || "");
+  if (!["candidaturas", "whatsapp", "compartilhamento"].includes(tipo)) return;
+  await supabase.from("consentimentos").insert({ user_id: user.id, org_id: await currentOrgId(), tipo, aceito: false, versao: POLICY_VERSION });
+  // Revogar o WhatsApp também desativa o Radar.
+  if (tipo === "whatsapp") await supabase.from("candidatos").update({ radar_whatsapp: false }).eq("id", user.id);
+  revalidatePath("/painel-candidato");
 }

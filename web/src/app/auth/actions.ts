@@ -1,9 +1,12 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { currentOrgId, getBrand } from "@/lib/tenant";
 import { emailMarca } from "@/lib/notify";
+import { POLICY_VERSION } from "@/lib/consentimento";
 
 type Estado = { erro?: string } | undefined;
 
@@ -22,16 +25,35 @@ export async function signUp(_prev: Estado, formData: FormData): Promise<Estado>
   const password = String(formData.get("password") || "");
   const nome = String(formData.get("nome") || "");
   const papel = String(formData.get("papel") || "candidato");
+  const cons = {
+    candidaturas: formData.get("c_candidaturas") != null,
+    whatsapp: formData.get("c_whatsapp") != null,
+    compartilhamento: formData.get("c_compartilhamento") != null,
+  };
   const supabase = await createClient();
   // Vincula a nova conta ao tenant corrente (resolvido do subdomínio/host).
   // O trigger handle_new_user usa este org_id; sem ele, cai no MaringáPost.
   const orgId = await currentOrgId();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: { data: { nome, papel, ...(orgId ? { org_id: orgId } : {}) } },
   });
   if (error) return { erro: traduz(error.message) };
+
+  // Registro dos consentimentos granulares (RNF-07) com versão + IP, via
+  // service-role (a conta pode ainda não ter sessão por causa da confirmação).
+  const userId = data.user?.id;
+  const admin = createAdminClient();
+  if (userId && admin) {
+    const ip = (await headers()).get("x-forwarded-for")?.split(",")[0].trim() || null;
+    await admin.from("consentimentos").insert(
+      (["candidaturas", "whatsapp", "compartilhamento"] as const).map((tipo) => ({
+        user_id: userId, org_id: orgId, tipo, aceito: cons[tipo], versao: POLICY_VERSION, ip,
+      }))
+    );
+  }
+
   revalidatePath("/", "layout");
   redirect(papel === "empresa" ? "/painel-empresa" : "/painel-candidato");
 }
