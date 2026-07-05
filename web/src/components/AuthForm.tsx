@@ -60,6 +60,27 @@ export function AuthForm({ mode, papel = "candidato" }: { mode: Mode; papel?: Pa
           <input name="password" type="password" required minLength={6} autoComplete={mode === "login" ? "current-password" : "new-password"} />
         </label>
 
+        {mode === "signup" && (
+          <div style={{ display: "grid", gap: 8, fontSize: 12.5, color: "var(--ink-60)", margin: "4px 0" }}>
+            <label style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+              <input type="checkbox" name="c_candidaturas" required style={{ marginTop: 2 }} />
+              <span>Li e concordo com a <a href="/privacidade" style={{ color: "var(--accent)" }}>Política de Privacidade</a> e autorizo o uso dos meus dados na plataforma. (obrigatório)</span>
+            </label>
+            {papel !== "empresa" && (
+              <>
+                <label style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                  <input type="checkbox" name="c_whatsapp" style={{ marginTop: 2 }} />
+                  <span>Aceito receber alertas de vagas por WhatsApp (Radar). (opcional)</span>
+                </label>
+                <label style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                  <input type="checkbox" name="c_compartilhamento" style={{ marginTop: 2 }} />
+                  <span>Autorizo compartilhar meu perfil com empresas parceiras. (opcional)</span>
+                </label>
+              </>
+            )}
+          </div>
+        )}
+
         {state?.erro && <p className="auth-erro" role="alert">{state.erro}</p>}
 
         <button type="submit" className="btn btn-primary btn-full" disabled={pending}>

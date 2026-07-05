@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requireCandidato } from "@/lib/auth";
+import { Icon } from "@/components/Icon";
 import { PerfilForm } from "@/components/PerfilForm";
 import { RadarForm } from "@/components/RadarForm";
 import { JobCard } from "@/components/JobCard";
 import { ExcluirContaButton } from "@/components/ExcluirContaButton";
 import { getTaxonomias } from "@/lib/tenant";
 import { maskCPF } from "@/lib/validacao";
+import { revogarConsentimento } from "@/app/painel-candidato/actions";
+import { TIPOS_CONSENTIMENTO, LABEL_CONSENTIMENTO } from "@/lib/consentimento";
 import type { VagaComEmpresa } from "@/data/types";
 
 export const metadata: Metadata = { title: "Minha conta" };
@@ -48,6 +51,12 @@ export default async function PainelCandidatoPage() {
     telefone: (perfilTel?.telefone as string | null) || "",
     salarioMin: (cand?.radar_salario_min as number | null) ?? null,
   };
+
+  // Consentimentos (estado atual = linha mais recente por tipo).
+  const { data: consData } = await supabase.from("consentimentos").select("tipo,aceito,criado_em").eq("user_id", user.id).order("criado_em", { ascending: false });
+  const consentAtual = new Map<string, boolean>();
+  for (const c of (consData as { tipo: string; aceito: boolean }[]) || []) if (!consentAtual.has(c.tipo)) consentAtual.set(c.tipo, c.aceito);
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "/empregos";
   const candidaturas = (candData as unknown as Candidatura[]) || [];
   const salvas = ((savData as unknown as { vaga: Candidatura["vaga"] }[]) || []).map((s) => s.vaga).filter(Boolean);
   const perfilInicial = {
@@ -136,12 +145,39 @@ export default async function PainelCandidatoPage() {
         </ul>
       )}
 
-      <h2 style={{ fontSize: 18, margin: "40px 0 8px" }}>Privacidade</h2>
+      <h2 style={{ fontSize: 18, margin: "40px 0 8px" }}>Portal de Direitos (LGPD)</h2>
       <p style={{ color: "var(--ink-60)", fontSize: 13.5, marginBottom: 12 }}>
-        Você pode excluir sua conta e todos os seus dados a qualquer momento (LGPD). Veja como tratamos seus dados na{" "}
+        Baixe seus dados, gerencie consentimentos ou exclua sua conta. Veja a{" "}
         <Link href="/privacidade" style={{ color: "var(--accent)", fontWeight: 600 }}>Política de Privacidade</Link>.
       </p>
-      <ExcluirContaButton />
+      <div style={{ display: "grid", gap: 14, border: "1px solid var(--line)", borderRadius: 12, padding: 16 }}>
+        <a href={`${basePath}/api/meus-dados`} className="btn btn-ghost btn-sm" style={{ width: "fit-content" }}>
+          <Icon name="doc" size={15} /> Baixar meus dados (JSON)
+        </a>
+        <div>
+          <strong style={{ fontSize: 14 }}>Consentimentos</strong>
+          <ul style={{ listStyle: "none", padding: 0, margin: "8px 0 0", display: "grid", gap: 8 }}>
+            {TIPOS_CONSENTIMENTO.map((tipo) => {
+              const aceito = consentAtual.get(tipo);
+              return (
+                <li key={tipo} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13.5 }}>
+                  <span style={{ flex: 1 }}>{LABEL_CONSENTIMENTO[tipo]}</span>
+                  <span className="chip">{aceito ? "Autorizado" : "Não autorizado"}</span>
+                  {aceito && (
+                    <form action={revogarConsentimento}>
+                      <input type="hidden" name="tipo" value={tipo} />
+                      <button type="submit" className="btn btn-ghost btn-sm">Revogar</button>
+                    </form>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+        <div style={{ borderTop: "1px solid var(--line)", paddingTop: 12 }}>
+          <ExcluirContaButton />
+        </div>
+      </div>
     </div>
   );
 }
