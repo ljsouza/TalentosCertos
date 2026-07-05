@@ -4,6 +4,8 @@ import { requireCandidato } from "@/lib/auth";
 import { PerfilForm } from "@/components/PerfilForm";
 import { JobCard } from "@/components/JobCard";
 import { ExcluirContaButton } from "@/components/ExcluirContaButton";
+import { getTaxonomias } from "@/lib/tenant";
+import { maskCPF } from "@/lib/validacao";
 import type { VagaComEmpresa } from "@/data/types";
 
 export const metadata: Metadata = { title: "Minha conta" };
@@ -24,6 +26,7 @@ type Candidatura = {
 
 export default async function PainelCandidatoPage() {
   const { perfil, user, supabase } = await requireCandidato();
+  const { areas, cidades } = await getTaxonomias();
 
   const [{ data: candData }, { data: savData }, { data: cand }] = await Promise.all([
     supabase
@@ -36,7 +39,7 @@ export default async function PainelCandidatoPage() {
       .select("vaga:vagas(id,titulo,cidade,empresa:empresas(nome))")
       .eq("candidato_id", user.id)
       .order("criado_em", { ascending: false }),
-    supabase.from("candidatos").select("area,cidade,resumo,skills,curriculo_url").eq("id", user.id).maybeSingle(),
+    supabase.from("candidatos").select("area,cidade,resumo,skills,curriculo_url,cpf,formacoes,experiencias,pontos_fortes").eq("id", user.id).maybeSingle(),
   ]);
   const candidaturas = (candData as unknown as Candidatura[]) || [];
   const salvas = ((savData as unknown as { vaga: Candidatura["vaga"] }[]) || []).map((s) => s.vaga).filter(Boolean);
@@ -47,6 +50,10 @@ export default async function PainelCandidatoPage() {
     resumo: cand?.resumo || "",
     skills: (cand?.skills as string[] | null) || [],
     curriculoUrl: (cand?.curriculo_url as string | null) || null,
+    cpf: (cand?.cpf as string | null) ? maskCPF(cand!.cpf as string) : "",
+    formacoes: (cand?.formacoes as { instituicao: string; curso: string; nivel: string; ano: string }[] | null) || [],
+    experiencias: (cand?.experiencias as { empresa: string; cargo: string; periodo: string; descricao: string }[] | null) || [],
+    pontosFortes: (cand?.pontos_fortes as string[] | null) || [],
   };
 
   // Match semântico: vagas recomendadas pelo embedding do perfil.
@@ -84,7 +91,7 @@ export default async function PainelCandidatoPage() {
 
       <h2 style={{ fontSize: 18, marginBottom: 12 }}>Meu perfil</h2>
       <p style={{ color: "var(--ink-60)", fontSize: 14, marginBottom: 14 }}>Cole seu currículo ou envie um PDF — a IA preenche para você. Edite e salve.</p>
-      <PerfilForm inicial={perfilInicial} />
+      <PerfilForm inicial={perfilInicial} areas={areas} cidades={cidades} />
 
       <h2 style={{ fontSize: 18, margin: "32px 0 12px" }}>Minhas candidaturas ({candidaturas.length})</h2>
       {candidaturas.length === 0 ? (

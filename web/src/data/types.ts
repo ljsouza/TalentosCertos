@@ -51,6 +51,8 @@ export interface EmpresaPerfil extends Empresa {
   endereco: string | null;
   destaques: string[];
   video_youtube: string | null;
+  cnpj?: string | null;
+  razao_social?: string | null;
 }
 
 // Vaga com a empresa embutida (join) — usada nos cards e no detalhe.

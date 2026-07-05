@@ -8,6 +8,7 @@ import { href, PRIMARY_NAV, MENU_GROUPS } from "@/lib/nav";
 import { signOut } from "@/app/auth/actions";
 
 type Perfil = { nome: string; papel: string } | null;
+type Marca = { logoWord: string; logoTag: string };
 
 function MegaMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   const pathname = usePathname();
@@ -47,7 +48,7 @@ function MegaMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   );
 }
 
-export function SiteHeader({ user }: { user: Perfil }) {
+export function SiteHeader({ user, brand }: { user: Perfil; brand: Marca }) {
   const router = useRouter();
   const pathname = usePathname();
   const [mmOpen, setMmOpen] = useState(false);
@@ -61,7 +62,7 @@ export function SiteHeader({ user }: { user: Perfil }) {
         <button className="menu-btn" onClick={() => setMmOpen(true)} aria-label="Abrir menu da plataforma" title="Todos os menus">
           <span className="menu-btn-bars"><span></span><span></span><span></span></span>
         </button>
-        <Logo size={20} onClick={() => router.push("/")} />
+        <Logo size={20} word={brand.logoWord} tag={brand.logoTag} onClick={() => router.push("/")} />
         <nav className="nav-links">
           {PRIMARY_NAV.map((n) => (
             <Link key={n.id} href={href(n.id)} className={pathname === href(n.id) ? "on" : ""}>{n.label}</Link>

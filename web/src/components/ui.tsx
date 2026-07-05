@@ -5,11 +5,11 @@ import type { Empresa } from "@/data/types";
 
 // Componentes presentacionais puros (sem hooks) — usáveis em Server ou Client.
 
-export function Logo({ size = 22, onClick }: { size?: number; onClick?: () => void }) {
+export function Logo({ size = 22, onClick, word = "MaringáPost", tag = "Empregos" }: { size?: number; onClick?: () => void; word?: string; tag?: string }) {
   return (
-    <button className="logo" onClick={onClick} aria-label="MaringáPost Empregos — início">
-      <span className="logo-word" style={{ fontSize: size }}>MARINGÁ POST</span>
-      <span className="logo-vert">EMPREGOS</span>
+    <button className="logo" onClick={onClick} aria-label={`${word} ${tag} — início`}>
+      <span className="logo-word" style={{ fontSize: size }}>{word}</span>
+      <span className="logo-vert">{tag}</span>
     </button>
   );
 }

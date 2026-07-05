@@ -5,6 +5,7 @@ import { NovaVagaForm } from "@/components/NovaVagaForm";
 import { PerfilEmpresaForm } from "@/components/PerfilEmpresaForm";
 import { ExcluirContaButton } from "@/components/ExcluirContaButton";
 import { requireEmpresa } from "@/lib/auth";
+import { getTaxonomias } from "@/lib/tenant";
 import { encerrarVaga } from "@/app/painel-empresa/actions";
 import type { Vaga, EmpresaPerfil } from "@/data/types";
 
@@ -12,8 +13,10 @@ export const metadata: Metadata = { title: "Painel da empresa" };
 
 export default async function PainelEmpresaPage() {
   const { empresa, perfil, supabase } = await requireEmpresa();
+  const { areas, cidades } = await getTaxonomias();
 
   let vagas: Vaga[] = [];
+  const contagem = new Map<string, number>();
   if (empresa) {
     const { data } = await supabase
       .from("vagas")
@@ -21,6 +24,15 @@ export default async function PainelEmpresaPage() {
       .eq("empresa_id", empresa.id)
       .order("criado_em", { ascending: false });
     vagas = (data as Vaga[]) || [];
+
+    // Candidaturas por vaga (RLS "empresa lê candidaturas das suas vagas").
+    const ids = vagas.map((v) => v.id);
+    if (ids.length) {
+      const { data: cands } = await supabase.from("candidaturas").select("vaga_id").in("vaga_id", ids);
+      for (const c of (cands as { vaga_id: string }[]) || []) {
+        contagem.set(c.vaga_id, (contagem.get(c.vaga_id) ?? 0) + 1);
+      }
+    }
   }
 
   return (
@@ -60,6 +72,9 @@ export default async function PainelEmpresaPage() {
                     <Link href={`/vaga/${v.id}`} style={{ fontWeight: 600 }}>{v.titulo}</Link>
                     <div style={{ color: "var(--ink-60)", fontSize: 13 }}>{v.cidade} · {v.modalidade} · <span style={{ textTransform: "capitalize" }}>{v.status}</span></div>
                   </div>
+                  <Link href={`/painel-empresa/vaga/${v.id}`} className="btn btn-ghost btn-sm">
+                    Ver candidatos ({contagem.get(v.id) ?? 0})
+                  </Link>
                   {v.status === "aberta" && (
                     <form action={encerrarVaga}>
                       <input type="hidden" name="id" value={v.id} />
@@ -74,7 +89,7 @@ export default async function PainelEmpresaPage() {
 
         <section>
           <h2 style={{ fontSize: 18, marginBottom: 12 }}><Icon name="plus" size={18} /> Publicar nova vaga</h2>
-          <NovaVagaForm />
+          <NovaVagaForm areas={areas} cidades={cidades} />
         </section>
       </div>
 
