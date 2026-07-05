@@ -62,15 +62,43 @@ export async function getTenantSlug(): Promise<string> {
   return tenantSlugFromHost(h.get("host"));
 }
 
+// Resolve o "alvo" do tenant a partir do host — UMA aplicação, tenant dinâmico:
+//  • TENANT_SLUG (env) → override fixo (deploy dedicado a um tenant).
+//  • <slug>.talentoscertos.com.br → por slug (subdomínio do SaaS).
+//  • apex/www → institucional (null).
+//  • qualquer outro host (domínio próprio: araucaria.pr.gov.br, maringapost.com.br)
+//    → por `organizacoes.dominio` (custom domain).
+function alvoTenant(host: string | null | undefined): { por: "slug" | "dominio"; valor: string } | null {
+  if (process.env.TENANT_SLUG) return { por: "slug", valor: process.env.TENANT_SLUG };
+  const hostname = (host ?? "").split(":")[0].toLowerCase();
+  if (!hostname) return { por: "slug", valor: DEFAULT_TENANT };
+
+  const rootSuffix = `.${ROOT_DOMAIN}`;
+  if (hostname.endsWith(rootSuffix)) {
+    const sub = hostname.slice(0, -rootSuffix.length);
+    return sub && sub !== "www" ? { por: "slug", valor: sub } : null;
+  }
+  if (hostname === ROOT_DOMAIN) return null;
+  if (hostname === "localhost") return { por: "slug", valor: DEFAULT_TENANT };
+  if (hostname.endsWith(".localhost")) {
+    const sub = hostname.slice(0, -".localhost".length);
+    return { por: "slug", valor: sub && sub !== "www" ? sub : DEFAULT_TENANT };
+  }
+  return { por: "dominio", valor: hostname };
+}
+
 // Organização corrente (cacheada por request). null = institucional ou mock.
+// UMA aplicação resolve o tenant por subdomínio OU domínio próprio — sem env por tenant.
 export const getTenant = cache(async (): Promise<Organizacao | null> => {
-  const slug = await getTenantSlug();
-  if (!slug) return null;
+  const h = await headers();
+  const alvo = alvoTenant(h.get("host"));
+  if (!alvo) return null;
   if (!supabaseEnabled || !supabase) return null; // modo mock (sem Supabase)
   const { data } = await supabase
     .from("organizacoes")
     .select("id,slug,nome,tipo,base_path,dominio,branding,status")
-    .eq("slug", slug)
+    .eq(alvo.por, alvo.valor)
+    .eq("status", "ativo")
     .maybeSingle();
   return (data as unknown as Organizacao) ?? null;
 });
