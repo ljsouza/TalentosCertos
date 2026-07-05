@@ -53,3 +53,26 @@ export async function salvarPerfil(_prev: Estado, formData: FormData): Promise<E
   revalidatePath("/", "layout");
   return { ok: true };
 }
+
+// Radar de Vagas por WhatsApp (item 1.14) — opt-in com consentimento LGPD.
+export async function salvarRadar(_prev: Estado, formData: FormData): Promise<Estado> {
+  const { user, supabase } = await requireCandidato();
+  const ativar = formData.get("radar_ativo") != null;
+  const consentiu = formData.get("consentimento") != null;
+  const telefone = String(formData.get("telefone") || "").trim();
+  const salRaw = soDigitos(String(formData.get("radar_salario_min") || ""));
+  const radarSalarioMin = salRaw ? Number(salRaw) : null;
+
+  if (ativar && !consentiu) return { erro: "Para ativar o Radar, aceite o consentimento (LGPD)." };
+  if (ativar && !telefone) return { erro: "Informe seu WhatsApp para ativar o Radar." };
+
+  if (telefone) await supabase.from("perfis").update({ telefone }).eq("id", user.id);
+  const { error } = await supabase.from("candidatos").update({
+    radar_whatsapp: ativar,
+    radar_consentido_em: ativar ? new Date().toISOString() : null,
+    radar_salario_min: radarSalarioMin,
+  }).eq("id", user.id);
+  if (error) return { erro: error.message };
+  revalidatePath("/painel-candidato");
+  return { ok: true };
+}
