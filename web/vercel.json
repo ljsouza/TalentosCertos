@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
   "crons": [
     { "path": "/empregos/api/cron/encerrar-vagas", "schedule": "0 6 * * *" }
   ]
